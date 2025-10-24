@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
@@ -25,6 +25,9 @@ export class App {
   protected readonly isSubmitting = signal(false);
   protected readonly submissionError = signal<string | null>(null);
   protected readonly submissionResult = signal<StartResponse | null>(null);
+  protected readonly antecedentOptions = signal<string[]>([]);
+  protected readonly selectedAntecedents = signal<Set<string>>(new Set());
+  protected readonly selectedAntecedentsList = computed(() => Array.from(this.selectedAntecedents()));
 
   private readonly fb = inject(FormBuilder);
   private readonly http = inject(HttpClient);
@@ -44,6 +47,8 @@ export class App {
     this.isSubmitting.set(true);
     this.submissionError.set(null);
     this.submissionResult.set(null);
+    this.antecedentOptions.set([]);
+    this.selectedAntecedents.set(new Set());
 
     const payload = this.intakeForm.getRawValue();
 
@@ -52,6 +57,9 @@ export class App {
         this.http.post<StartResponse>(`${API_BASE_URL}/start`, payload)
       );
 
+      const antecedents = this.extractAntecedents(response.answer);
+      this.antecedentOptions.set(antecedents);
+      this.selectedAntecedents.set(new Set());
       this.submissionResult.set(response);
     } catch (error) {
       const message = this.extractErrorMessage(error);
@@ -69,6 +77,71 @@ export class App {
     });
     this.submissionError.set(null);
     this.submissionResult.set(null);
+    this.antecedentOptions.set([]);
+    this.selectedAntecedents.set(new Set());
+  }
+
+  protected onAntecedentChange(option: string, event: Event): void {
+    const input = event.target instanceof HTMLInputElement ? event.target : null;
+    if (!input) {
+      return;
+    }
+
+    const isChecked = input.checked;
+    this.selectedAntecedents.update((current) => {
+      const updated = new Set(current);
+      if (isChecked) {
+        updated.add(option);
+      } else {
+        updated.delete(option);
+      }
+      return updated;
+    });
+  }
+
+  protected isAntecedentSelected(option: string): boolean {
+    return this.selectedAntecedents().has(option);
+  }
+
+  private extractAntecedents(answer: string): string[] {
+    const attemptParse = (value: string): string[] => {
+      try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed) && parsed.every((item) => typeof item === 'string')) {
+          return parsed;
+        }
+      } catch {
+        // Ignore parse errors and fall back to next strategy.
+      }
+      return [];
+    };
+
+    const trimmedAnswer = answer.trim();
+
+    let antecedents = attemptParse(trimmedAnswer);
+    if (antecedents.length > 0) {
+      return antecedents;
+    }
+
+    const fencedMatch = trimmedAnswer.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    if (fencedMatch?.[1]) {
+      antecedents = attemptParse(fencedMatch[1].trim());
+      if (antecedents.length > 0) {
+        return antecedents;
+      }
+    }
+
+    const startIndex = trimmedAnswer.indexOf('[');
+    const endIndex = trimmedAnswer.lastIndexOf(']');
+    if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+      const bracketContent = trimmedAnswer.slice(startIndex, endIndex + 1);
+      antecedents = attemptParse(bracketContent);
+      if (antecedents.length > 0) {
+        return antecedents;
+      }
+    }
+
+    return [];
   }
 
   private extractErrorMessage(error: unknown): string {

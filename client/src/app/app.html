@@ -84,9 +84,34 @@
 
     @if (submissionResult(); as result) {
       <section class="result result--success">
-        <h2>Suggested Intake Summary</h2>
-        <p class="result__model">Model: {{ result.model }}</p>
-        <pre class="result__text">{{ result.answer }}</pre>
+        <h2>Antecedentes sugeridos</h2>
+        <p class="result__model">Modelo: {{ result.model }}</p>
+
+        @if (antecedentOptions().length > 0) {
+          <fieldset class="antecedents">
+            <legend class="antecedents__legend">Selecciona los antecedentes relevantes</legend>
+            <div class="antecedents__grid">
+              @for (option of antecedentOptions(); track option) {
+                <label class="antecedents__option">
+                  <input
+                    type="checkbox"
+                    [checked]="isAntecedentSelected(option)"
+                    (change)="onAntecedentChange(option, $event)"
+                  />
+                  <span class="antecedents__label">{{ option }}</span>
+                </label>
+              }
+            </div>
+          </fieldset>
+
+          @if (selectedAntecedentsList().length > 0) {
+            <p class="antecedents__selection">
+              Antecedentes seleccionados: {{ selectedAntecedentsList().join(', ') }}
+            </p>
+          }
+        } @else {
+          <pre class="result__text">{{ result.answer }}</pre>
+        }
       </section>
     }
 
