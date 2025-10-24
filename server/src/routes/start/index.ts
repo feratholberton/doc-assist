@@ -4,6 +4,7 @@ interface StartRequestBody {
   age: number;
   gender: 'Male' | 'Female';
   chiefComplaint: string;
+  excludeAntecedents?: string[];
 }
 
 interface StartResponseBody {
@@ -22,7 +23,12 @@ const startRoute: FastifyPluginAsync = async (fastify) => {
           properties: {
             age: { type: 'integer', minimum: 0, maximum: 140 },
             gender: { type: 'string', enum: ['Male', 'Female'] },
-            chiefComplaint: { type: 'string', minLength: 1 }
+            chiefComplaint: { type: 'string', minLength: 1 },
+            excludeAntecedents: {
+              type: 'array',
+              items: { type: 'string', minLength: 1 },
+              maxItems: 32
+            }
           }
         },
         response: {
@@ -42,7 +48,7 @@ const startRoute: FastifyPluginAsync = async (fastify) => {
         throw fastify.httpErrors.serviceUnavailable('Google GenAI client is not configured')
       }
 
-      const { age, gender, chiefComplaint } = request.body
+      const { age, gender, chiefComplaint, excludeAntecedents } = request.body
       const chosenModel = fastify.genAIDefaultModel
       const prompt = [
         '- Eres un médico clínico.',
@@ -52,11 +58,18 @@ const startRoute: FastifyPluginAsync = async (fastify) => {
         '- Responde ÚNICAMENTE con UN SOLO array JSON válido de strings.',
         '- No añadas texto, explicaciones ni encabezados. Si no hay elementos relevantes, responde con []. No inventes información ni fechas.',
         '',
+        excludeAntecedents?.length
+          ? `- No repitas ninguno de los siguientes antecedentes ya sugeridos: ${excludeAntecedents.join('; ')}.`
+          : undefined,
+        excludeAntecedents?.length
+          ? `Antecedentes ya descartados: ${excludeAntecedents.join('; ')}.`
+          : undefined,
+        excludeAntecedents?.length ? '' : undefined,
         'Datos:',
         `Edad: ${age}`,
         `Género: ${gender}`,
         `Motivo de consulta: ${chiefComplaint}`
-      ].join('\n')
+      ].filter((line): line is string => typeof line === 'string').join('\n')
 
       try {
         const response = await fastify.genAIClient.models.generateContent({

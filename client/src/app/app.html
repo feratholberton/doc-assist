@@ -104,10 +104,70 @@
             </div>
           </fieldset>
 
+          <div class="antecedents__actions">
+            <button
+              type="button"
+              class="antecedents__actions-button"
+              (click)="requestMoreAntecedents()"
+              [disabled]="isSubmitting()"
+            >
+              {{ isSubmitting() ? 'Solicitando nuevas opciones…' : 'Necesito otras opciones' }}
+            </button>
+          </div>
+
+          <div class="antecedents__custom">
+            <label class="antecedents__custom-label" for="customAntecedent">
+              Agregar un antecedente personalizado
+            </label>
+            <div class="antecedents__custom-controls">
+              <input
+                id="customAntecedent"
+                type="text"
+                class="antecedents__custom-input"
+                #customAntecedentInput
+                [value]="customAntecedentText()"
+                (input)="updateCustomAntecedentText(customAntecedentInput.value)"
+                [disabled]="isSubmitting()"
+                placeholder="Ej.: Cirugía rodilla 2018"
+              />
+              <button
+                type="button"
+                class="antecedents__custom-add"
+                (click)="addCustomAntecedent()"
+                [disabled]="isSubmitting() || customAntecedentText().trim().length === 0"
+              >
+                Añadir
+              </button>
+            </div>
+
+            @if (customAntecedentsList().length > 0) {
+              <ul class="antecedents__custom-list">
+                @for (custom of customAntecedentsList(); track custom) {
+                  <li class="antecedents__custom-item">
+                    <span>{{ custom }}</span>
+                    <button
+                      type="button"
+                      class="antecedents__custom-remove"
+                      (click)="removeCustomAntecedent(custom)"
+                      [disabled]="isSubmitting()"
+                    >
+                      Quitar
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+
           @if (selectedAntecedentsList().length > 0) {
-            <p class="antecedents__selection">
-              Antecedentes seleccionados: {{ selectedAntecedentsList().join(', ') }}
-            </p>
+            <div class="antecedents__selection">
+              <span class="antecedents__selection-label">Antecedentes seleccionados:</span>
+              <ul class="antecedents__selection-list">
+                @for (item of selectedAntecedentsList(); track item) {
+                  <li>{{ item }}</li>
+                }
+              </ul>
+            </div>
           }
         } @else {
           <pre class="result__text">{{ result.answer }}</pre>

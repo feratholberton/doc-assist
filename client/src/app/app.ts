@@ -27,6 +27,10 @@ export class App {
   protected readonly submissionResult = signal<StartResponse | null>(null);
   protected readonly antecedentOptions = signal<string[]>([]);
   protected readonly selectedAntecedents = signal<Set<string>>(new Set());
+  protected readonly seenAntecedents = signal<Set<string>>(new Set());
+  protected readonly customAntecedents = signal<Set<string>>(new Set());
+  protected readonly customAntecedentText = signal('');
+  protected readonly customAntecedentsList = computed(() => Array.from(this.customAntecedents()));
   protected readonly selectedAntecedentsList = computed(() => Array.from(this.selectedAntecedents()));
 
   private readonly fb = inject(FormBuilder);
@@ -44,29 +48,7 @@ export class App {
       return;
     }
 
-    this.isSubmitting.set(true);
-    this.submissionError.set(null);
-    this.submissionResult.set(null);
-    this.antecedentOptions.set([]);
-    this.selectedAntecedents.set(new Set());
-
-    const payload = this.intakeForm.getRawValue();
-
-    try {
-      const response = await firstValueFrom(
-        this.http.post<StartResponse>(`${API_BASE_URL}/start`, payload)
-      );
-
-      const antecedents = this.extractAntecedents(response.answer);
-      this.antecedentOptions.set(antecedents);
-      this.selectedAntecedents.set(new Set());
-      this.submissionResult.set(response);
-    } catch (error) {
-      const message = this.extractErrorMessage(error);
-      this.submissionError.set(message);
-    } finally {
-      this.isSubmitting.set(false);
-    }
+    await this.fetchAntecedents({ resetState: true });
   }
 
   protected resetForm(): void {
@@ -79,6 +61,67 @@ export class App {
     this.submissionResult.set(null);
     this.antecedentOptions.set([]);
     this.selectedAntecedents.set(new Set());
+    this.seenAntecedents.set(new Set());
+    this.customAntecedents.set(new Set());
+    this.customAntecedentText.set('');
+  }
+
+  protected async requestMoreAntecedents(): Promise<void> {
+    if (this.isSubmitting()) {
+      return;
+    }
+
+    if (!this.submissionResult()) {
+      await this.fetchAntecedents({ resetState: true });
+      return;
+    }
+
+    await this.fetchAntecedents({ resetState: false });
+  }
+
+  protected addCustomAntecedent(): void {
+    const value = this.customAntecedentText().trim();
+    if (!value) {
+      return;
+    }
+
+    const alreadySelected = this.selectedAntecedents().has(value);
+    if (alreadySelected) {
+      this.customAntecedentText.set('');
+      return;
+    }
+
+    this.customAntecedents.update((current) => {
+      const updated = new Set(current);
+      updated.add(value);
+      return updated;
+    });
+
+    this.selectedAntecedents.update((current) => {
+      const updated = new Set(current);
+      updated.add(value);
+      return updated;
+    });
+
+    this.customAntecedentText.set('');
+  }
+
+  protected updateCustomAntecedentText(value: string): void {
+    this.customAntecedentText.set(value);
+  }
+
+  protected removeCustomAntecedent(value: string): void {
+    this.customAntecedents.update((current) => {
+      const updated = new Set(current);
+      updated.delete(value);
+      return updated;
+    });
+
+    this.selectedAntecedents.update((current) => {
+      const updated = new Set(current);
+      updated.delete(value);
+      return updated;
+    });
   }
 
   protected onAntecedentChange(option: string, event: Event): void {
@@ -101,6 +144,68 @@ export class App {
 
   protected isAntecedentSelected(option: string): boolean {
     return this.selectedAntecedents().has(option);
+  }
+
+  private async fetchAntecedents({ resetState }: { resetState: boolean }): Promise<void> {
+    this.isSubmitting.set(true);
+    this.submissionError.set(null);
+
+    if (resetState) {
+      this.submissionResult.set(null);
+      this.antecedentOptions.set([]);
+      this.selectedAntecedents.set(new Set());
+      this.customAntecedents.set(new Set());
+      this.customAntecedentText.set('');
+      this.seenAntecedents.set(new Set());
+    }
+
+    const basePayload = this.intakeForm.getRawValue();
+    const seenList = Array.from(this.seenAntecedents());
+    const excludeAntecedents = resetState
+      ? []
+      : seenList.slice(Math.max(0, seenList.length - 32));
+    const payload = excludeAntecedents.length > 0 ? { ...basePayload, excludeAntecedents } : basePayload;
+
+    try {
+      const response = await firstValueFrom(
+        this.http.post<StartResponse>(`${API_BASE_URL}/start`, payload)
+      );
+
+      const antecedents = this.extractAntecedents(response.answer);
+      const previousSeen = resetState ? new Set<string>() : new Set(this.seenAntecedents());
+      const newSuggestions = antecedents.filter((item) => !previousSeen.has(item));
+      const rawOptions = newSuggestions.length > 0 ? newSuggestions : antecedents;
+      const uniqueOptions = rawOptions.filter((item, index, arr) => arr.indexOf(item) === index).slice(0, 8);
+      const updatedSeen = new Set(previousSeen);
+      uniqueOptions.forEach((item) => updatedSeen.add(item));
+
+      this.antecedentOptions.set(uniqueOptions);
+      this.seenAntecedents.set(updatedSeen);
+      this.submissionResult.set(response);
+
+      if (!resetState) {
+        this.selectedAntecedents.update((current) => {
+          const custom = this.customAntecedents();
+          const next = new Set<string>();
+          uniqueOptions.forEach((item) => {
+            if (current.has(item)) {
+              next.add(item);
+            }
+          });
+          custom.forEach((item) => {
+            if (current.has(item)) {
+              next.add(item);
+            }
+          });
+          return next;
+        });
+      }
+    } catch (error) {
+      const message = this.extractErrorMessage(error);
+      this.submissionError.set(message);
+    } finally {
+      this.isSubmitting.set(false);
+    }
   }
 
   private extractAntecedents(answer: string): string[] {
