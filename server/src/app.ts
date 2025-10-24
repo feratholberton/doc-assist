@@ -1,6 +1,9 @@
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import AutoLoad, { AutoloadPluginOptions } from '@fastify/autoload'
 import { FastifyPluginAsync, FastifyServerOptions } from 'fastify'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export interface AppOptions extends FastifyServerOptions, Partial<AutoloadPluginOptions> {
 
