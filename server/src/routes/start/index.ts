@@ -1,7 +1,9 @@
 import { FastifyPluginAsync } from 'fastify'
 
 interface StartRequestBody {
-  question: string;
+  age: number;
+  gender: 'Male' | 'Female';
+  chiefComplaint: string;
 }
 
 interface StartResponseBody {
@@ -16,9 +18,11 @@ const startRoute: FastifyPluginAsync = async (fastify) => {
       schema: {
         body: {
           type: 'object',
-          required: ['question'],
+          required: ['age', 'gender', 'chiefComplaint'],
           properties: {
-            question: { type: 'string', minLength: 1 }
+            age: { type: 'integer', minimum: 0, maximum: 140 },
+            gender: { type: 'string', enum: ['Male', 'Female'] },
+            chiefComplaint: { type: 'string', minLength: 1 }
           }
         },
         response: {
@@ -38,13 +42,19 @@ const startRoute: FastifyPluginAsync = async (fastify) => {
         throw fastify.httpErrors.serviceUnavailable('Google GenAI client is not configured')
       }
 
-      const { question } = request.body
+      const { age, gender, chiefComplaint } = request.body
       const chosenModel = fastify.genAIDefaultModel
+      const prompt = [
+        'You are a clinical intake assistant. Provide a concise summary and initial guidance.',
+        `Age: ${age}`,
+        `Gender: ${gender}`,
+        `Chief complaint: ${chiefComplaint}`
+      ].join('\n')
 
       try {
         const response = await fastify.genAIClient.models.generateContent({
           model: chosenModel,
-          contents: question
+          contents: prompt
         })
 
         const answer = response.text
