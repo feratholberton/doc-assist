@@ -7,172 +7,29 @@
       </p>
     </header>
 
-    <form class="form" [formGroup]="intakeForm" (ngSubmit)="submit()" novalidate>
-      <div class="form__group">
-        <label class="form__label" for="age">Age</label>
-        <input
-          id="age"
-          type="number"
-          formControlName="age"
-          inputmode="numeric"
-          min="0"
-          max="140"
-          [class.form__control--invalid]="intakeForm.controls.age.invalid && intakeForm.controls.age.touched"
-          class="form__control"
-        />
-        @if (intakeForm.controls.age.hasError('required') && intakeForm.controls.age.touched) {
-          <p class="form__error">
-            Age is required.
-          </p>
-        }
-        @if ((intakeForm.controls.age.hasError('min') || intakeForm.controls.age.hasError('max')) && intakeForm.controls.age.touched) {
-          <p class="form__error">
-            Age must be between 0 and 140.
-          </p>
-        }
-      </div>
-
-      <div class="form__group">
-        <label class="form__label" for="gender">Gender</label>
-        <select
-          id="gender"
-          formControlName="gender"
-          class="form__control"
-          [class.form__control--invalid]="intakeForm.controls.gender.invalid && intakeForm.controls.gender.touched"
-        >
-          @for (option of genders(); track option) {
-            <option [value]="option">{{ option }}</option>
-          }
-        </select>
-        @if (intakeForm.controls.gender.hasError('required') && intakeForm.controls.gender.touched) {
-          <p class="form__error">
-            Gender is required.
-          </p>
-        }
-      </div>
-
-      <div class="form__group">
-        <label class="form__label" for="chiefComplaint">Chief Complaint</label>
-        <textarea
-          id="chiefComplaint"
-          formControlName="chiefComplaint"
-          rows="5"
-          class="form__control form__control--textarea"
-          [class.form__control--invalid]="intakeForm.controls.chiefComplaint.invalid && intakeForm.controls.chiefComplaint.touched"
-        ></textarea>
-        @if (intakeForm.controls.chiefComplaint.hasError('required') && intakeForm.controls.chiefComplaint.touched) {
-          <p class="form__error">
-            Chief complaint is required.
-          </p>
-        }
-        @if (intakeForm.controls.chiefComplaint.hasError('maxlength') && intakeForm.controls.chiefComplaint.touched) {
-          <p class="form__error">
-            Chief complaint must be 1000 characters or fewer.
-          </p>
-        }
-      </div>
-
-      <div class="form__actions">
-        <button type="submit" class="button button--primary" [disabled]="isSubmitting()">
-          {{ isSubmitting() ? 'Submitting…' : 'Generate Summary' }}
-        </button>
-        <button type="button" class="button button--secondary" (click)="resetForm()" [disabled]="isSubmitting()">
-          Reset
-        </button>
-      </div>
-    </form>
+    <app-patient-intake-form
+      [intakeForm]="intakeForm"
+      [genders]="genders()"
+      [isSubmitting]="isSubmitting()"
+      (submitForm)="submit()"
+      (resetForm)="resetForm()"
+    />
 
     @if (submissionResult(); as result) {
-      <section class="result result--success">
-        <h2>Antecedentes sugeridos</h2>
-        <p class="result__model">Modelo: {{ result.model }}</p>
-
-        @if (antecedentOptions().length > 0) {
-          <fieldset class="antecedents">
-            <legend class="antecedents__legend">Selecciona los antecedentes relevantes</legend>
-            <div class="antecedents__grid">
-              @for (option of antecedentOptions(); track option) {
-                <label class="antecedents__option">
-                  <input
-                    type="checkbox"
-                    [checked]="isAntecedentSelected(option)"
-                    (change)="onAntecedentChange(option, $event)"
-                  />
-                  <span class="antecedents__label">{{ option }}</span>
-                </label>
-              }
-            </div>
-          </fieldset>
-
-          <div class="antecedents__actions">
-            <button
-              type="button"
-              class="antecedents__actions-button"
-              (click)="requestMoreAntecedents()"
-              [disabled]="isSubmitting()"
-            >
-              {{ isSubmitting() ? 'Solicitando nuevas opciones…' : 'Necesito otras opciones' }}
-            </button>
-          </div>
-
-          <div class="antecedents__custom">
-            <label class="antecedents__custom-label" for="customAntecedent">
-              Agregar un antecedente personalizado
-            </label>
-            <div class="antecedents__custom-controls">
-              <input
-                id="customAntecedent"
-                type="text"
-                class="antecedents__custom-input"
-                #customAntecedentInput
-                [value]="customAntecedentText()"
-                (input)="updateCustomAntecedentText(customAntecedentInput.value)"
-                [disabled]="isSubmitting()"
-                placeholder="Ej.: Cirugía rodilla 2018"
-              />
-              <button
-                type="button"
-                class="antecedents__custom-add"
-                (click)="addCustomAntecedent()"
-                [disabled]="isSubmitting() || customAntecedentText().trim().length === 0"
-              >
-                Añadir
-              </button>
-            </div>
-
-            @if (customAntecedentsList().length > 0) {
-              <ul class="antecedents__custom-list">
-                @for (custom of customAntecedentsList(); track custom) {
-                  <li class="antecedents__custom-item">
-                    <span>{{ custom }}</span>
-                    <button
-                      type="button"
-                      class="antecedents__custom-remove"
-                      (click)="removeCustomAntecedent(custom)"
-                      [disabled]="isSubmitting()"
-                    >
-                      Quitar
-                    </button>
-                  </li>
-                }
-              </ul>
-            }
-          </div>
-
-          @if (selectedAntecedentsList().length > 0) {
-            <div class="antecedents__selection">
-              <span class="antecedents__selection-label">Antecedentes seleccionados:</span>
-              <ul class="antecedents__selection-list">
-                @for (item of selectedAntecedentsList(); track item) {
-                  <li>{{ item }}</li>
-                }
-              </ul>
-            </div>
-          }
-        } @else {
-          <pre class="result__text">{{ result.answer }}</pre>
-        }
-      </section>
+      <app-antecedents-section
+        [model]="result.model"
+        [answer]="result.answer"
+        [options]="antecedentOptions()"
+        [selected]="selectedAntecedentsList()"
+        [customList]="customAntecedentsList()"
+        [customText]="customAntecedentText()"
+        [isSubmitting]="isSubmitting()"
+        (requestMore)="requestMoreAntecedents()"
+        (toggleOption)="onAntecedentToggle($event.option, $event.checked)"
+        (addCustom)="addCustomAntecedent()"
+        (customTextChange)="updateCustomAntecedentText($event)"
+        (removeCustom)="removeCustomAntecedent($event)"
+      />
     }
 
     @if (submissionError(); as error) {

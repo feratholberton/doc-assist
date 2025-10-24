@@ -1,0 +1,91 @@
+<section class="result result--success">
+  <h2>Antecedentes sugeridos</h2>
+  <p class="result__model">Modelo: {{ model }}</p>
+
+  @if (options.length > 0) {
+    <fieldset class="antecedents">
+      <legend class="antecedents__legend">Selecciona los antecedentes relevantes</legend>
+      <div class="antecedents__grid">
+        @for (option of options; track option) {
+          <label class="antecedents__option">
+            <input
+              #optionInput
+              type="checkbox"
+              [checked]="isSelected(option)"
+              (change)="onCheckboxChange(option, optionInput.checked)"
+            />
+            <span class="antecedents__label">{{ option }}</span>
+          </label>
+        }
+      </div>
+    </fieldset>
+
+    <div class="antecedents__actions">
+      <button
+        type="button"
+        class="antecedents__actions-button"
+        (click)="onRequestMore()"
+        [disabled]="isSubmitting"
+      >
+        {{ isSubmitting ? 'Solicitando nuevas opciones…' : 'Necesito otras opciones' }}
+      </button>
+    </div>
+
+    <div class="antecedents__custom">
+      <label class="antecedents__custom-label" for="customAntecedent">
+        Agregar un antecedente personalizado
+      </label>
+      <div class="antecedents__custom-controls">
+        <input
+          id="customAntecedent"
+          type="text"
+          class="antecedents__custom-input"
+          #customAntecedentInput
+          [value]="customText"
+          (input)="onCustomTextInput(customAntecedentInput.value)"
+          [disabled]="isSubmitting"
+          placeholder="Ej.: Cirugía rodilla 2018"
+        />
+        <button
+          type="button"
+          class="antecedents__custom-add"
+          (click)="onAddCustom()"
+          [disabled]="isSubmitting || customText.trim().length === 0"
+        >
+          Añadir
+        </button>
+      </div>
+
+      @if (customList.length > 0) {
+        <ul class="antecedents__custom-list">
+          @for (custom of customList; track custom) {
+            <li class="antecedents__custom-item">
+              <span>{{ custom }}</span>
+              <button
+                type="button"
+                class="antecedents__custom-remove"
+                (click)="onRemoveCustom(custom)"
+                [disabled]="isSubmitting"
+              >
+                Quitar
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+
+    @if (selected.length > 0) {
+      <div class="antecedents__selection">
+        <span class="antecedents__selection-label">Antecedentes seleccionados:</span>
+        <ul class="antecedents__selection-list">
+          @for (item of selected; track item) {
+            <li>{{ item }}</li>
+          }
+        </ul>
+      </div>
+    }
+  } @else {
+    <pre class="result__text">{{ answer }}</pre>
+  }
+</section>

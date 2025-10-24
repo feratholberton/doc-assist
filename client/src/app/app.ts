@@ -3,6 +3,8 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { CommonModule } from '@angular/common';
+import { PatientIntakeFormComponent } from './components/patient-intake-form/patient-intake-form.component';
+import { AntecedentsSectionComponent } from './components/antecedents-section/antecedents-section.component';
 
 interface StartResponse {
   answer: string;
@@ -15,7 +17,7 @@ const API_BASE_URL = (globalThis as { APP_API_BASE_URL?: string }).APP_API_BASE_
 
 @Component({
   selector: 'app-root',
-  imports: [ReactiveFormsModule, CommonModule],
+  imports: [ReactiveFormsModule, CommonModule, PatientIntakeFormComponent, AntecedentsSectionComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -124,26 +126,16 @@ export class App {
     });
   }
 
-  protected onAntecedentChange(option: string, event: Event): void {
-    const input = event.target instanceof HTMLInputElement ? event.target : null;
-    if (!input) {
-      return;
-    }
-
-    const isChecked = input.checked;
+  protected onAntecedentToggle(option: string, checked: boolean): void {
     this.selectedAntecedents.update((current) => {
       const updated = new Set(current);
-      if (isChecked) {
+      if (checked) {
         updated.add(option);
       } else {
         updated.delete(option);
       }
       return updated;
     });
-  }
-
-  protected isAntecedentSelected(option: string): boolean {
-    return this.selectedAntecedents().has(option);
   }
 
   private async fetchAntecedents({ resetState }: { resetState: boolean }): Promise<void> {

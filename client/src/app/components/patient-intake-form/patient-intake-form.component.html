@@ -1,0 +1,77 @@
+<form class="form" [formGroup]="intakeForm" (ngSubmit)="onSubmit()" novalidate>
+  <div class="form__group">
+    <label class="form__label" for="age">Age</label>
+    <input
+      id="age"
+      type="number"
+      formControlName="age"
+      inputmode="numeric"
+      min="0"
+      max="140"
+      class="form__control"
+      [class.form__control--invalid]="intakeForm.get('age')?.invalid && intakeForm.get('age')?.touched"
+    />
+    @if (intakeForm.get('age')?.hasError('required') && intakeForm.get('age')?.touched) {
+      <p class="form__error">
+        Age is required.
+      </p>
+    }
+    @if (
+      (intakeForm.get('age')?.hasError('min') || intakeForm.get('age')?.hasError('max')) &&
+      intakeForm.get('age')?.touched
+    ) {
+      <p class="form__error">
+        Age must be between 0 and 140.
+      </p>
+    }
+  </div>
+
+  <div class="form__group">
+    <label class="form__label" for="gender">Gender</label>
+    <select
+      id="gender"
+      formControlName="gender"
+      class="form__control"
+      [class.form__control--invalid]="intakeForm.get('gender')?.invalid && intakeForm.get('gender')?.touched"
+    >
+      @for (option of genders; track option) {
+        <option [value]="option">{{ option }}</option>
+      }
+    </select>
+    @if (intakeForm.get('gender')?.hasError('required') && intakeForm.get('gender')?.touched) {
+      <p class="form__error">
+        Gender is required.
+      </p>
+    }
+  </div>
+
+  <div class="form__group">
+    <label class="form__label" for="chiefComplaint">Chief Complaint</label>
+    <textarea
+      id="chiefComplaint"
+      formControlName="chiefComplaint"
+      rows="5"
+      class="form__control form__control--textarea"
+      [class.form__control--invalid]="intakeForm.get('chiefComplaint')?.invalid && intakeForm.get('chiefComplaint')?.touched"
+    ></textarea>
+    @if (intakeForm.get('chiefComplaint')?.hasError('required') && intakeForm.get('chiefComplaint')?.touched) {
+      <p class="form__error">
+        Chief complaint is required.
+      </p>
+    }
+    @if (intakeForm.get('chiefComplaint')?.hasError('maxlength') && intakeForm.get('chiefComplaint')?.touched) {
+      <p class="form__error">
+        Chief complaint must be 1000 characters or fewer.
+      </p>
+    }
+  </div>
+
+  <div class="form__actions">
+    <button type="submit" class="button button--primary" [disabled]="isSubmitting">
+      {{ isSubmitting ? 'Submitting…' : 'Generate Summary' }}
+    </button>
+    <button type="button" class="button button--secondary" (click)="onReset()" [disabled]="isSubmitting">
+      Reset
+    </button>
+  </div>
+</form>
