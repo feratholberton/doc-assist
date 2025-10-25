@@ -146,6 +146,7 @@ export class App {
   protected readonly isSavingAllergies = signal(false);
   protected readonly allergySaveMessage = signal<string | null>(null);
   protected readonly allergySaveError = signal<string | null>(null);
+  protected readonly hasSavedAllergies = signal(false);
   protected readonly drugOptions = signal<string[]>([]);
   protected readonly selectedDrugs = signal<Set<string>>(new Set());
   protected readonly seenDrugs = signal<Set<string>>(new Set());
@@ -207,6 +208,17 @@ export class App {
     this.isSavingAllergies.set(false);
     this.allergySaveMessage.set(null);
     this.allergySaveError.set(null);
+    this.hasSavedAllergies.set(false);
+    this.drugOptions.set([]);
+    this.selectedDrugs.set(new Set());
+    this.seenDrugs.set(new Set());
+    this.customDrugs.set(new Set());
+    this.customDrugText.set('');
+    this.additionalDrugFetches.set(0);
+    this.isFetchingDrugs.set(false);
+    this.isSavingDrugs.set(false);
+    this.drugSaveMessage.set(null);
+    this.drugSaveError.set(null);
     this.isSavingAntecedents.set(false);
     this.antecedentSaveMessage.set(null);
     this.antecedentSaveError.set(null);
@@ -320,6 +332,7 @@ export class App {
     this.isSavingAntecedents.set(true);
     this.antecedentSaveMessage.set(null);
     this.antecedentSaveError.set(null);
+    this.hasSavedAllergies.set(false);
 
     const payload = {
       ...this.intakeForm.getRawValue(),
@@ -655,11 +668,13 @@ export class App {
       );
 
       const record = response.record;
-      this.drugOptions.set(record.suggestedDrugs);
-      this.seenDrugs.set(new Set(record.suggestedDrugs));
-      this.selectedDrugs.set(new Set(record.selectedDrugs));
-      const customItems = record.selectedDrugs.filter(
-        (item) => !record.suggestedDrugs.includes(item)
+      const recordSuggestedDrugs = record.suggestedDrugs ?? [];
+      const recordSelectedDrugs = record.selectedDrugs ?? [];
+      this.drugOptions.set(recordSuggestedDrugs);
+      this.seenDrugs.set(new Set(recordSuggestedDrugs));
+      this.selectedDrugs.set(new Set(recordSelectedDrugs));
+      const customItems = recordSelectedDrugs.filter(
+        (item) => !recordSuggestedDrugs.includes(item)
       );
       this.customDrugs.set(new Set(customItems));
       this.customDrugText.set('');
@@ -700,15 +715,33 @@ export class App {
       );
 
       const record = response.record;
-      this.allergyOptions.set(record.suggestedAllergies);
-      this.seenAllergies.set(new Set(record.suggestedAllergies));
-      this.selectedAllergies.set(new Set(record.selectedAllergies));
-      const customItems = record.selectedAllergies.filter(
-        (item) => !record.suggestedAllergies.includes(item)
+      const suggestedAllergies = record.suggestedAllergies ?? [];
+      const selectedAllergies = record.selectedAllergies ?? [];
+      this.allergyOptions.set(suggestedAllergies);
+      this.seenAllergies.set(new Set(suggestedAllergies));
+      this.selectedAllergies.set(new Set(selectedAllergies));
+      const customAllergyItems = selectedAllergies.filter(
+        (item) => !suggestedAllergies.includes(item)
       );
-      this.customAllergies.set(new Set(customItems));
+      this.customAllergies.set(new Set(customAllergyItems));
       this.customAllergyText.set('');
+      this.additionalAllergyFetches.set(0);
       this.allergySaveMessage.set(response.message ?? 'Alergias confirmadas guardadas.');
+
+      const suggestedDrugs = response.suggestedDrugs ?? record.suggestedDrugs ?? [];
+      const selectedDrugs = record.selectedDrugs ?? [];
+      this.drugOptions.set(suggestedDrugs);
+      this.seenDrugs.set(new Set(suggestedDrugs));
+      this.selectedDrugs.set(new Set(selectedDrugs));
+      const customDrugItems = selectedDrugs.filter((item) => !suggestedDrugs.includes(item));
+      this.customDrugs.set(new Set(customDrugItems));
+      this.customDrugText.set('');
+      this.additionalDrugFetches.set(0);
+      this.isFetchingDrugs.set(false);
+      this.isSavingDrugs.set(false);
+      this.drugSaveMessage.set(null);
+      this.drugSaveError.set(null);
+      this.hasSavedAllergies.set(true);
     } catch (error) {
       const message = this.extractErrorMessage(error);
       this.allergySaveError.set(message);
@@ -741,6 +774,17 @@ export class App {
       this.isSavingAllergies.set(false);
       this.allergySaveMessage.set(null);
       this.allergySaveError.set(null);
+      this.hasSavedAllergies.set(false);
+      this.drugOptions.set([]);
+      this.selectedDrugs.set(new Set());
+      this.seenDrugs.set(new Set());
+      this.customDrugs.set(new Set());
+      this.customDrugText.set('');
+      this.additionalDrugFetches.set(0);
+      this.isFetchingDrugs.set(false);
+      this.isSavingDrugs.set(false);
+      this.drugSaveMessage.set(null);
+      this.drugSaveError.set(null);
     }
 
     const basePayload = this.intakeForm.getRawValue();

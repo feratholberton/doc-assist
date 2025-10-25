@@ -51,15 +51,35 @@ app.use((req, res, next) => {
  * Start the server if this module is the main entry point.
  * The server listens on the port defined by the `PORT` environment variable, or defaults to 4000.
  */
+const handleBootstrapError = (error: NodeJS.ErrnoException | undefined) => {
+  if (!error) {
+    return;
+  }
+
+  const permissionDenied = error.code === 'EPERM' || error.code === 'EACCES';
+
+  if (permissionDenied) {
+    console.warn(
+      'Angular SSR server bootstrap skipped: unable to bind to a local port in this environment.',
+    );
+    return;
+  }
+
+  throw error;
+};
+
 if (isMainModule(import.meta.url)) {
   const port = process.env['PORT'] || 4000;
-  app.listen(port, (error) => {
-    if (error) {
-      throw error;
-    }
 
-    console.log(`Node Express server listening on http://localhost:${port}`);
-  });
+  try {
+    const server = app.listen(port, () => {
+      console.log(`Node Express server listening on http://localhost:${port}`);
+    });
+
+    server.once('error', handleBootstrapError);
+  } catch (error) {
+    handleBootstrapError(error as NodeJS.ErrnoException | undefined);
+  }
 }
 
 /**

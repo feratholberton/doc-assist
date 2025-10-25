@@ -58,11 +58,13 @@
     }
 
     @if (
-      drugOptions().length > 0 ||
-      customDrugsList().length > 0 ||
-      selectedDrugsList().length > 0 ||
-      drugSaveMessage() ||
-      drugSaveError()
+      hasSavedAllergies() && (
+        drugOptions().length > 0 ||
+        customDrugsList().length > 0 ||
+        selectedDrugsList().length > 0 ||
+        drugSaveMessage() ||
+        drugSaveError()
+      )
     ) {
       <app-drugs-section
         [options]="drugOptions()"
