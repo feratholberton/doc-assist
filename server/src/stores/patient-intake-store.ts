@@ -7,6 +7,8 @@ export interface PatientIntakeRecord {
   selectedAntecedents: string[];
   suggestedAllergies: string[];
   selectedAllergies: string[];
+  suggestedDrugs: string[];
+  selectedDrugs: string[];
   updatedAt: string;
 }
 
@@ -31,6 +33,8 @@ export const normalizeAntecedents = (antecedents: string[] | undefined): string[
 
 export const normalizeAllergies = (allergies: string[] | undefined): string[] => normalizeStringList(allergies);
 
+export const normalizeDrugs = (drugs: string[] | undefined): string[] => normalizeStringList(drugs);
+
 export const getPatientIntake = (key: string): PatientIntakeRecord | undefined => patientIntakeStore.get(key);
 
 export interface PatientIntakeUpdate {
@@ -40,6 +44,8 @@ export interface PatientIntakeUpdate {
   selectedAntecedents?: string[];
   suggestedAllergies?: string[];
   selectedAllergies?: string[];
+  suggestedDrugs?: string[];
+  selectedDrugs?: string[];
 }
 
 export const upsertPatientIntake = (update: PatientIntakeUpdate): PatientIntakeRecord => {
@@ -53,6 +59,8 @@ export const upsertPatientIntake = (update: PatientIntakeUpdate): PatientIntakeR
     selectedAntecedents: update.selectedAntecedents ?? existing?.selectedAntecedents ?? [],
     suggestedAllergies: update.suggestedAllergies ?? existing?.suggestedAllergies ?? [],
     selectedAllergies: update.selectedAllergies ?? existing?.selectedAllergies ?? [],
+    suggestedDrugs: update.suggestedDrugs ?? existing?.suggestedDrugs ?? [],
+    selectedDrugs: update.selectedDrugs ?? existing?.selectedDrugs ?? [],
     updatedAt: new Date().toISOString()
   };
 

@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { PatientIntakeFormComponent } from './components/patient-intake-form/patient-intake-form.component';
 import { AntecedentsSectionComponent } from './components/antecedents-section/antecedents-section.component';
 import { AllergiesSectionComponent } from './components/allergies-section/allergies-section.component';
+import { DrugsSectionComponent } from './components/drugs-section/drugs-section.component';
 
 type Gender = 'Male' | 'Female';
 
@@ -23,9 +24,12 @@ interface SaveAntecedentsResponse {
     selectedAntecedents: string[];
     selectedAllergies: string[];
     suggestedAllergies: string[];
+    selectedDrugs: string[];
+    suggestedDrugs: string[];
     updatedAt: string;
   };
   suggestedAllergies: string[];
+  suggestedDrugs?: string[];
   model: string;
 }
 
@@ -40,6 +44,8 @@ interface AllergySuggestionResponse {
     selectedAntecedents: string[];
     suggestedAllergies: string[];
     selectedAllergies: string[];
+    suggestedDrugs: string[];
+    selectedDrugs: string[];
     updatedAt: string;
   };
 }
@@ -53,6 +59,42 @@ interface SaveAllergiesResponse {
     selectedAntecedents: string[];
     suggestedAllergies: string[];
     selectedAllergies: string[];
+    suggestedDrugs: string[];
+    selectedDrugs: string[];
+    updatedAt: string;
+  };
+  suggestedDrugs: string[];
+  model: string;
+}
+
+interface DrugSuggestionResponse {
+  message: string;
+  suggestedDrugs: string[];
+  model: string;
+  record: {
+    age: number;
+    gender: Gender;
+    chiefComplaint: string;
+    selectedAntecedents: string[];
+    selectedAllergies: string[];
+    selectedDrugs: string[];
+    suggestedAllergies: string[];
+    suggestedDrugs: string[];
+    updatedAt: string;
+  };
+}
+
+interface SaveDrugsResponse {
+  message: string;
+  record: {
+    age: number;
+    gender: Gender;
+    chiefComplaint: string;
+    selectedAntecedents: string[];
+    selectedAllergies: string[];
+    selectedDrugs: string[];
+    suggestedAllergies: string[];
+    suggestedDrugs: string[];
     updatedAt: string;
   };
 }
@@ -66,7 +108,8 @@ const API_BASE_URL = (globalThis as { APP_API_BASE_URL?: string }).APP_API_BASE_
     CommonModule,
     PatientIntakeFormComponent,
     AntecedentsSectionComponent,
-    AllergiesSectionComponent
+    AllergiesSectionComponent,
+    DrugsSectionComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -103,6 +146,21 @@ export class App {
   protected readonly isSavingAllergies = signal(false);
   protected readonly allergySaveMessage = signal<string | null>(null);
   protected readonly allergySaveError = signal<string | null>(null);
+  protected readonly drugOptions = signal<string[]>([]);
+  protected readonly selectedDrugs = signal<Set<string>>(new Set());
+  protected readonly seenDrugs = signal<Set<string>>(new Set());
+  protected readonly customDrugs = signal<Set<string>>(new Set());
+  protected readonly customDrugText = signal('');
+  protected readonly customDrugsList = computed(() => Array.from(this.customDrugs()));
+  protected readonly selectedDrugsList = computed(() => Array.from(this.selectedDrugs()));
+  protected readonly additionalDrugFetches = signal(0);
+  protected readonly canRequestMoreDrugs = computed(
+    () => this.additionalDrugFetches() < 2 && this.drugOptions().length < 24
+  );
+  protected readonly isFetchingDrugs = signal(false);
+  protected readonly isSavingDrugs = signal(false);
+  protected readonly drugSaveMessage = signal<string | null>(null);
+  protected readonly drugSaveError = signal<string | null>(null);
   protected readonly isSavingAntecedents = signal(false);
   protected readonly antecedentSaveMessage = signal<string | null>(null);
   protected readonly antecedentSaveError = signal<string | null>(null);
@@ -274,6 +332,7 @@ export class App {
       );
       const baseMessage = response.message ?? 'Antecedentes confirmados guardados.';
       const suggestedAllergies = response.suggestedAllergies ?? [];
+      const suggestedDrugs = response.suggestedDrugs ?? [];
       this.allergyOptions.set(suggestedAllergies);
       this.seenAllergies.set(new Set(suggestedAllergies));
       const normalizedSelectedAllergies = response.record.selectedAllergies ?? [];
@@ -288,6 +347,25 @@ export class App {
       this.isSavingAllergies.set(false);
       this.allergySaveMessage.set(null);
       this.allergySaveError.set(null);
+
+      this.drugOptions.set(suggestedDrugs);
+      this.seenDrugs.set(new Set(suggestedDrugs));
+      const normalizedSelectedDrugs = response.record.selectedDrugs ?? [];
+      this.selectedDrugs.set(new Set(normalizedSelectedDrugs));
+      const customDrugs = normalizedSelectedDrugs.filter(
+        (item) => !suggestedDrugs.includes(item)
+      );
+      this.customDrugs.set(new Set(customDrugs));
+      this.customDrugText.set('');
+      this.additionalDrugFetches.set(0);
+      this.isFetchingDrugs.set(false);
+      this.isSavingDrugs.set(false);
+      this.drugSaveMessage.set(
+        suggestedDrugs.length > 0
+          ? 'Se sugirieron nuevos medicamentos para evaluar.'
+          : 'No se sugirieron medicamentos. Puedes agregar los necesarios manualmente.'
+      );
+      this.drugSaveError.set(null);
 
       const allergyDetails =
         suggestedAllergies.length > 0
@@ -415,6 +493,182 @@ export class App {
       this.allergySaveError.set(message);
     } finally {
       this.isFetchingAllergies.set(false);
+    }
+  }
+
+  protected onDrugToggle(option: string, checked: boolean): void {
+    this.selectedDrugs.update((current) => {
+      const updated = new Set(current);
+      if (checked) {
+        updated.add(option);
+      } else {
+        updated.delete(option);
+      }
+      return updated;
+    });
+    this.drugSaveMessage.set(null);
+    this.drugSaveError.set(null);
+  }
+
+  protected addCustomDrug(): void {
+    const value = this.customDrugText().trim();
+    if (!value) {
+      return;
+    }
+
+    const alreadySelected = this.selectedDrugs().has(value);
+    if (alreadySelected) {
+      this.customDrugText.set('');
+      return;
+    }
+
+    this.customDrugs.update((current) => {
+      const updated = new Set(current);
+      updated.add(value);
+      return updated;
+    });
+
+    this.selectedDrugs.update((current) => {
+      const updated = new Set(current);
+      updated.add(value);
+      return updated;
+    });
+
+    this.customDrugText.set('');
+    this.drugSaveMessage.set(null);
+    this.drugSaveError.set(null);
+  }
+
+  protected updateCustomDrugText(value: string): void {
+    this.customDrugText.set(value);
+  }
+
+  protected removeCustomDrug(value: string): void {
+    this.customDrugs.update((current) => {
+      const updated = new Set(current);
+      updated.delete(value);
+      return updated;
+    });
+
+    this.selectedDrugs.update((current) => {
+      const updated = new Set(current);
+      updated.delete(value);
+      return updated;
+    });
+
+    this.drugSaveMessage.set(null);
+    this.drugSaveError.set(null);
+  }
+
+  protected async requestMoreDrugs(): Promise<void> {
+    if (this.isFetchingDrugs() || !this.canRequestMoreDrugs()) {
+      return;
+    }
+
+    const previousAttempts = this.additionalDrugFetches();
+    this.additionalDrugFetches.set(previousAttempts + 1);
+    this.isFetchingDrugs.set(true);
+    this.drugSaveMessage.set(null);
+    this.drugSaveError.set(null);
+
+    const payload = {
+      ...this.intakeForm.getRawValue(),
+      selectedAntecedents: Array.from(this.selectedAntecedents()),
+      selectedAllergies: Array.from(this.selectedAllergies()),
+      selectedDrugs: Array.from(this.selectedDrugs()),
+      excludeDrugs: Array.from(this.seenDrugs())
+    };
+
+    try {
+      const response = await firstValueFrom(
+        this.http.post<DrugSuggestionResponse>(`${API_BASE_URL}/drugs/suggest`, payload)
+      );
+
+      const newSuggestions = response.suggestedDrugs ?? [];
+      if (newSuggestions.length > 0) {
+        this.drugOptions.update((current) => {
+          const merged = [
+            ...current,
+            ...newSuggestions.filter((item) => !current.includes(item))
+          ];
+          return merged.slice(0, 24);
+        });
+
+        this.seenDrugs.update((current) => {
+          const updated = new Set(current);
+          newSuggestions.forEach((item) => updated.add(item));
+          return updated;
+        });
+
+        if (response.message) {
+          this.drugSaveMessage.set(response.message);
+        }
+      } else if (response.message) {
+        this.drugSaveMessage.set(response.message);
+      }
+
+      const record = response.record;
+      if (record) {
+        this.drugOptions.set(record.suggestedDrugs);
+        this.seenDrugs.set(new Set(record.suggestedDrugs));
+        this.selectedDrugs.set(new Set(record.selectedDrugs));
+        const customItems = record.selectedDrugs.filter(
+          (item) => !record.suggestedDrugs.includes(item)
+        );
+        this.customDrugs.set(new Set(customItems));
+      }
+    } catch (error) {
+      this.additionalDrugFetches.set(previousAttempts);
+      const message = this.extractErrorMessage(error);
+      this.drugSaveError.set(message);
+    } finally {
+      this.isFetchingDrugs.set(false);
+    }
+  }
+
+  protected async saveConfirmedDrugs(): Promise<void> {
+    const combinedSelections = new Set([
+      ...this.selectedDrugs(),
+      ...this.customDrugs()
+    ]);
+
+    if (combinedSelections.size === 0) {
+      this.drugSaveError.set('Selecciona o agrega al menos un medicamento antes de guardar.');
+      this.drugSaveMessage.set(null);
+      return;
+    }
+
+    this.isSavingDrugs.set(true);
+    this.drugSaveMessage.set(null);
+    this.drugSaveError.set(null);
+
+    const payload = {
+      ...this.intakeForm.getRawValue(),
+      selectedAntecedents: Array.from(this.selectedAntecedents()),
+      selectedAllergies: Array.from(this.selectedAllergies()),
+      selectedDrugs: Array.from(combinedSelections)
+    };
+
+    try {
+      const response = await firstValueFrom(
+        this.http.post<SaveDrugsResponse>(`${API_BASE_URL}/drugs`, payload)
+      );
+
+      const record = response.record;
+      this.drugOptions.set(record.suggestedDrugs);
+      this.seenDrugs.set(new Set(record.suggestedDrugs));
+      this.selectedDrugs.set(new Set(record.selectedDrugs));
+      const customItems = record.selectedDrugs.filter(
+        (item) => !record.suggestedDrugs.includes(item)
+      );
+      this.customDrugs.set(new Set(customItems));
+      this.customDrugText.set('');
+      this.drugSaveMessage.set(response.message ?? 'Medicamentos confirmados guardados.');
+    } catch (error) {
+      const message = this.extractErrorMessage(error);
+      this.drugSaveError.set(message);
+    } finally {
+      this.isSavingDrugs.set(false);
     }
   }
 

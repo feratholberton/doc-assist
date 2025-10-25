@@ -57,6 +57,32 @@
       />
     }
 
+    @if (
+      drugOptions().length > 0 ||
+      customDrugsList().length > 0 ||
+      selectedDrugsList().length > 0 ||
+      drugSaveMessage() ||
+      drugSaveError()
+    ) {
+      <app-drugs-section
+        [options]="drugOptions()"
+        [selected]="selectedDrugsList()"
+        [customList]="customDrugsList()"
+        [customText]="customDrugText()"
+        [canRequestMore]="canRequestMoreDrugs()"
+        [isFetching]="isFetchingDrugs()"
+        [isSaving]="isSavingDrugs()"
+        [saveMessage]="drugSaveMessage()"
+        [saveError]="drugSaveError()"
+        (toggleOption)="onDrugToggle($event.option, $event.checked)"
+        (requestMore)="requestMoreDrugs()"
+        (addCustom)="addCustomDrug()"
+        (customTextChange)="updateCustomDrugText($event)"
+        (removeCustom)="removeCustomDrug($event)"
+        (saveConfirmed)="saveConfirmedDrugs()"
+      />
+    }
+
     @if (submissionError(); as error) {
       <section class="result result--error">
         <h2>Submission Failed</h2>

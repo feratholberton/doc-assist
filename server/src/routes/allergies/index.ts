@@ -21,6 +21,8 @@ interface SaveAllergiesRequestBody {
 interface SaveAllergiesResponseBody {
   message: string;
   record: PatientIntakeRecord;
+  suggestedDrugs: string[];
+  model: string;
 }
 
 interface SuggestAllergiesRequestBody {
@@ -66,7 +68,7 @@ const allergiesRoute: FastifyPluginAsync = async (fastify) => {
         response: {
           200: {
             type: 'object',
-            required: ['message', 'record'],
+            required: ['message', 'record', 'suggestedDrugs', 'model'],
             properties: {
               message: { type: 'string' },
               record: {
@@ -78,6 +80,8 @@ const allergiesRoute: FastifyPluginAsync = async (fastify) => {
                   'selectedAntecedents',
                   'selectedAllergies',
                   'suggestedAllergies',
+                  'suggestedDrugs',
+                  'selectedDrugs',
                   'updatedAt'
                 ],
                 properties: {
@@ -96,15 +100,32 @@ const allergiesRoute: FastifyPluginAsync = async (fastify) => {
                     type: 'array',
                     items: { type: 'string' }
                   },
+                  suggestedDrugs: {
+                    type: 'array',
+                    items: { type: 'string' }
+                  },
+                  selectedDrugs: {
+                    type: 'array',
+                    items: { type: 'string' }
+                  },
                   updatedAt: { type: 'string' }
                 }
-              }
+              },
+              suggestedDrugs: {
+                type: 'array',
+                items: { type: 'string' }
+              },
+              model: { type: 'string' }
             }
           }
         }
       }
     },
     async (request) => {
+      if (!fastify.genAIClient) {
+        throw fastify.httpErrors.serviceUnavailable('Google GenAI client is not configured')
+      }
+
       const { age, gender, chiefComplaint, selectedAntecedents, selectedAllergies } = request.body
       const normalizedChiefComplaint = normalizeChiefComplaint(chiefComplaint)
       const normalizedAntecedentList =
@@ -113,19 +134,67 @@ const allergiesRoute: FastifyPluginAsync = async (fastify) => {
           : undefined
       const normalizedAllergyList = normalizeAllergies(selectedAllergies)
 
-      const record = upsertPatientIntake({
-        age,
-        gender,
-        chiefComplaint: normalizedChiefComplaint,
-        selectedAntecedents: normalizedAntecedentList,
-        selectedAllergies: normalizedAllergyList
-      })
+      const chosenModel = fastify.genAIDefaultModel
+      const prompt = [
+        '- Eres un médico clínico.',
+        '- Utiliza rigor clínico y epidemiológico, con foco en el Contexto de Uruguay (T=0)',
+        '- Basandote en los datos provistos: Edad, Género, Motivo de consulta, Antecedentes, Alergias. Genera hasta 8 medicamentos que podrían ser razonablemente considerados para este caso. SOLO EL NOMBRE. Prioriza nombres genéricos cuando sea posible.',
+        '- Responde ÚNICAMENTE con un array JSON válido de strings.',
+        '- No añadas texto, explicaciones ni encabezados. Si no hay elementos relevantes, responde con []. No inventes información ni fechas.',
+        '- Si la información clínica es insuficiente para proponer fármacos específicos, devuelve sugerencias generales de clases (por ejemplo: \"AINEs\", \"Antibiótico tópico para conjuntivitis\")',
+        '- NO inventes fármacos.',
+        '',
+        'Datos:',
+        `Edad: ${age}`,
+        `Género: ${gender}`,
+        `Motivo de consulta: ${normalizedChiefComplaint}`,
+        `Antecedentes confirmados: ${
+          normalizedAntecedentList && normalizedAntecedentList.length > 0
+            ? normalizedAntecedentList.join('; ')
+            : 'Ninguno'
+        }`,
+        `Alergias confirmadas: ${
+          normalizedAllergyList.length > 0 ? normalizedAllergyList.join('; ') : 'Ninguna'
+        }`
+      ].join('\n')
 
-      request.log.debug({ record }, 'Saved confirmed allergies')
+      try {
+        const response = await fastify.genAIClient.models.generateContent({
+          model: chosenModel,
+          contents: prompt
+        })
 
-      return {
-        message: 'Alergias confirmadas guardadas.',
-        record
+        const answer = response.text
+        if (!answer) {
+          request.log.warn({ response }, 'Google GenAI returned an empty drug list')
+          throw fastify.httpErrors.badGateway('El modelo no devolvió medicamentos válidos.')
+        }
+
+        const suggestedDrugs = parseStringArrayFromModelAnswer(answer)
+        if (suggestedDrugs.length === 0) {
+          request.log.warn({ answer }, 'Unable to parse drug suggestions from model response')
+        }
+
+        const record = upsertPatientIntake({
+          age,
+          gender,
+          chiefComplaint: normalizedChiefComplaint,
+          selectedAntecedents: normalizedAntecedentList,
+          selectedAllergies: normalizedAllergyList,
+          suggestedDrugs
+        })
+
+        request.log.debug({ record, suggestedDrugs }, 'Saved allergies and generated drug suggestions')
+
+        return {
+          message: 'Alergias confirmadas guardadas.',
+          record,
+          suggestedDrugs,
+          model: chosenModel
+        }
+      } catch (error) {
+        request.log.error({ err: error }, 'Failed to generate drug suggestions after saving allergies')
+        throw fastify.httpErrors.badGateway('No se pudieron generar medicamentos en este momento.')
       }
     }
   )
@@ -177,7 +246,9 @@ const allergiesRoute: FastifyPluginAsync = async (fastify) => {
                   'chiefComplaint',
                   'selectedAntecedents',
                   'selectedAllergies',
+                  'selectedDrugs',
                   'suggestedAllergies',
+                  'suggestedDrugs',
                   'updatedAt'
                 ],
                 properties: {
@@ -192,7 +263,15 @@ const allergiesRoute: FastifyPluginAsync = async (fastify) => {
                     type: 'array',
                     items: { type: 'string' }
                   },
+                  selectedDrugs: {
+                    type: 'array',
+                    items: { type: 'string' }
+                  },
                   suggestedAllergies: {
+                    type: 'array',
+                    items: { type: 'string' }
+                  },
+                  suggestedDrugs: {
                     type: 'array',
                     items: { type: 'string' }
                   },
