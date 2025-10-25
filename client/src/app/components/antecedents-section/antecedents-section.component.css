@@ -206,6 +206,50 @@
   color: #1f2933;
 }
 
+.antecedents__save {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.antecedents__save-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #10b981, #0ea5e9);
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.antecedents__save-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(14, 165, 233, 0.25);
+}
+
+.antecedents__save-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.antecedents__save-message {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.antecedents__save-message--success {
+  color: #047857;
+}
+
+.antecedents__save-message--error {
+  color: #b91c1c;
+}
+
 @media (min-width: 640px) {
   .antecedents__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

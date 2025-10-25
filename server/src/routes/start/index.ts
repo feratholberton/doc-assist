@@ -1,10 +1,12 @@
 import { FastifyPluginAsync } from 'fastify'
+import { normalizeAntecedents, normalizeChiefComplaint } from '../../stores/patient-intake-store.js'
 
 interface StartRequestBody {
   age: number;
   gender: 'Male' | 'Female';
   chiefComplaint: string;
   excludeAntecedents?: string[];
+  selectedAntecedents?: string[];
 }
 
 interface StartResponseBody {
@@ -28,6 +30,11 @@ const startRoute: FastifyPluginAsync = async (fastify) => {
               type: 'array',
               items: { type: 'string', minLength: 1 },
               maxItems: 32
+            },
+            selectedAntecedents: {
+              type: 'array',
+              items: { type: 'string', minLength: 1 },
+              maxItems: 24
             }
           }
         },
@@ -48,8 +55,10 @@ const startRoute: FastifyPluginAsync = async (fastify) => {
         throw fastify.httpErrors.serviceUnavailable('Google GenAI client is not configured')
       }
 
-      const { age, gender, chiefComplaint, excludeAntecedents } = request.body
+      const { age, gender, chiefComplaint, excludeAntecedents, selectedAntecedents } = request.body
       const chosenModel = fastify.genAIDefaultModel
+      const normalizedChiefComplaint = normalizeChiefComplaint(chiefComplaint)
+      const normalizedSelectedAntecedents = normalizeAntecedents(selectedAntecedents)
       const prompt = [
         '- Eres un médico clínico.',
         '- Utiliza rigor clínico y epidemiológico, con foco en el Contexto de Uruguay (T=0)',
@@ -64,11 +73,14 @@ const startRoute: FastifyPluginAsync = async (fastify) => {
         excludeAntecedents?.length
           ? `Antecedentes ya descartados: ${excludeAntecedents.join('; ')}.`
           : undefined,
+        normalizedSelectedAntecedents.length
+          ? `Antecedentes ya confirmados por el paciente: ${normalizedSelectedAntecedents.join('; ')}.`
+          : undefined,
         excludeAntecedents?.length ? '' : undefined,
         'Datos:',
         `Edad: ${age}`,
         `Género: ${gender}`,
-        `Motivo de consulta: ${chiefComplaint}`
+        `Motivo de consulta: ${normalizedChiefComplaint}`
       ].filter((line): line is string => typeof line === 'string').join('\n')
 
       try {

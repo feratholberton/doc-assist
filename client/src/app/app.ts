@@ -6,12 +6,23 @@ import { CommonModule } from '@angular/common';
 import { PatientIntakeFormComponent } from './components/patient-intake-form/patient-intake-form.component';
 import { AntecedentsSectionComponent } from './components/antecedents-section/antecedents-section.component';
 
+type Gender = 'Male' | 'Female';
+
 interface StartResponse {
   answer: string;
   model: string;
 }
 
-type Gender = 'Male' | 'Female';
+interface SaveAntecedentsResponse {
+  message: string;
+  record: {
+    age: number;
+    gender: Gender;
+    chiefComplaint: string;
+    selectedAntecedents: string[];
+    updatedAt: string;
+  };
+}
 
 const API_BASE_URL = (globalThis as { APP_API_BASE_URL?: string }).APP_API_BASE_URL ?? 'http://localhost:3000';
 
@@ -38,6 +49,9 @@ export class App {
   protected readonly canRequestMoreOptions = computed(
     () => this.additionalAntecedentFetches() < 2 && this.antecedentOptions().length < 24
   );
+  protected readonly isSavingAntecedents = signal(false);
+  protected readonly antecedentSaveMessage = signal<string | null>(null);
+  protected readonly antecedentSaveError = signal<string | null>(null);
 
   private readonly fb = inject(FormBuilder);
   private readonly http = inject(HttpClient);
@@ -71,12 +85,18 @@ export class App {
     this.customAntecedents.set(new Set());
     this.customAntecedentText.set('');
     this.additionalAntecedentFetches.set(0);
+    this.isSavingAntecedents.set(false);
+    this.antecedentSaveMessage.set(null);
+    this.antecedentSaveError.set(null);
   }
 
   protected async requestMoreAntecedents(): Promise<void> {
     if (this.isSubmitting()) {
       return;
     }
+
+    this.antecedentSaveMessage.set(null);
+    this.antecedentSaveError.set(null);
 
     if (!this.canRequestMoreOptions()) {
       return;
@@ -115,6 +135,8 @@ export class App {
     });
 
     this.customAntecedentText.set('');
+    this.antecedentSaveMessage.set(null);
+    this.antecedentSaveError.set(null);
   }
 
   protected updateCustomAntecedentText(value: string): void {
@@ -133,6 +155,8 @@ export class App {
       updated.delete(value);
       return updated;
     });
+    this.antecedentSaveMessage.set(null);
+    this.antecedentSaveError.set(null);
   }
 
   protected onAntecedentToggle(option: string, checked: boolean): void {
@@ -145,11 +169,48 @@ export class App {
       }
       return updated;
     });
+    this.antecedentSaveMessage.set(null);
+    this.antecedentSaveError.set(null);
+  }
+
+  protected async saveConfirmedAntecedents(): Promise<void> {
+    const selected = Array.from(this.selectedAntecedents());
+    if (selected.length === 0) {
+      this.antecedentSaveError.set('Selecciona al menos un antecedente para guardar.');
+      this.antecedentSaveMessage.set(null);
+      return;
+    }
+
+    this.isSavingAntecedents.set(true);
+    this.antecedentSaveMessage.set(null);
+    this.antecedentSaveError.set(null);
+
+    const payload = {
+      ...this.intakeForm.getRawValue(),
+      selectedAntecedents: selected
+    };
+
+    try {
+      const response = await firstValueFrom(
+        this.http.post<SaveAntecedentsResponse>(`${API_BASE_URL}/antecedents`, payload)
+      );
+      const successMessage = response.message ?? 'Antecedentes confirmados guardados.';
+      this.antecedentSaveMessage.set(successMessage);
+    } catch (error) {
+      const genericFailure = 'Unable to save the confirmed antecedents. Please try again.';
+      const rawMessage = this.extractErrorMessage(error);
+      const message = rawMessage === 'Unable to submit the intake information. Please try again.' ? genericFailure : rawMessage;
+      this.antecedentSaveError.set(message);
+    } finally {
+      this.isSavingAntecedents.set(false);
+    }
   }
 
   private async fetchAntecedents({ resetState }: { resetState: boolean }): Promise<void> {
     this.isSubmitting.set(true);
     this.submissionError.set(null);
+    this.antecedentSaveMessage.set(null);
+    this.antecedentSaveError.set(null);
 
     if (resetState) {
       this.submissionResult.set(null);
@@ -162,11 +223,14 @@ export class App {
     }
 
     const basePayload = this.intakeForm.getRawValue();
+    const selectedAntecedents = Array.from(this.selectedAntecedents());
     const seenList = Array.from(this.seenAntecedents());
     const excludeAntecedents = resetState
       ? []
       : seenList.slice(Math.max(0, seenList.length - 32));
-    const payload = excludeAntecedents.length > 0 ? { ...basePayload, excludeAntecedents } : basePayload;
+    const payloadBase = { ...basePayload, selectedAntecedents };
+    const payload =
+      excludeAntecedents.length > 0 ? { ...payloadBase, excludeAntecedents } : payloadBase;
 
     try {
       const response = await firstValueFrom(

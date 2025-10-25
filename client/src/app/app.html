@@ -25,11 +25,15 @@
         [customText]="customAntecedentText()"
         [isSubmitting]="isSubmitting()"
         [canRequestMore]="canRequestMoreOptions()"
+        [isSaving]="isSavingAntecedents()"
+        [saveMessage]="antecedentSaveMessage()"
+        [saveError]="antecedentSaveError()"
         (requestMore)="requestMoreAntecedents()"
         (toggleOption)="onAntecedentToggle($event.option, $event.checked)"
         (addCustom)="addCustomAntecedent()"
         (customTextChange)="updateCustomAntecedentText($event)"
         (removeCustom)="removeCustomAntecedent($event)"
+        (saveConfirmed)="saveConfirmedAntecedents()"
       />
     }
 

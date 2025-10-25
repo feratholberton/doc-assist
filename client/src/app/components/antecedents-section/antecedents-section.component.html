@@ -85,6 +85,25 @@
         </ul>
       </div>
     }
+
+    <div class="antecedents__save">
+      <button
+        type="button"
+        class="antecedents__save-button"
+        (click)="onSaveConfirmed()"
+        [disabled]="isSaving || isSubmitting || selected.length === 0"
+      >
+        {{ isSaving ? 'Guardando antecedentes…' : 'Guardar antecedentes confirmados' }}
+      </button>
+
+      @if (saveMessage) {
+        <p class="antecedents__save-message antecedents__save-message--success">{{ saveMessage }}</p>
+      }
+
+      @if (saveError) {
+        <p class="antecedents__save-message antecedents__save-message--error">{{ saveError }}</p>
+      }
+    </div>
   } @else {
     <pre class="result__text">{{ answer }}</pre>
   }

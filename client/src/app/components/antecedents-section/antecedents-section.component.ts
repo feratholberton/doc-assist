@@ -23,12 +23,16 @@ export class AntecedentsSectionComponent {
   @Input({ required: true }) customText = '';
   @Input() isSubmitting = false;
   @Input() canRequestMore = true;
+  @Input() isSaving = false;
+  @Input() saveMessage: string | null = null;
+  @Input() saveError: string | null = null;
 
   @Output() requestMore = new EventEmitter<void>();
   @Output() toggleOption = new EventEmitter<ToggleAntecedentEvent>();
   @Output() addCustom = new EventEmitter<void>();
   @Output() customTextChange = new EventEmitter<string>();
   @Output() removeCustom = new EventEmitter<string>();
+  @Output() saveConfirmed = new EventEmitter<void>();
 
   protected onCheckboxChange(option: string, checked: boolean): void {
     this.toggleOption.emit({ option, checked });
@@ -52,5 +56,9 @@ export class AntecedentsSectionComponent {
 
   protected isSelected(option: string): boolean {
     return this.selected.includes(option);
+  }
+
+  protected onSaveConfirmed(): void {
+    this.saveConfirmed.emit();
   }
 }
