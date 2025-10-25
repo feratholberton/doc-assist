@@ -7,99 +7,17 @@ import { PatientIntakeFormComponent } from './components/patient-intake-form/pat
 import { AntecedentsSectionComponent } from './components/antecedents-section/antecedents-section.component';
 import { AllergiesSectionComponent } from './components/allergies-section/allergies-section.component';
 import { DrugsSectionComponent } from './components/drugs-section/drugs-section.component';
-
-type Gender = 'Male' | 'Female';
-
-interface StartResponse {
-  answer: string;
-  model: string;
-}
-
-interface SaveAntecedentsResponse {
-  message: string;
-  record: {
-    age: number;
-    gender: Gender;
-    chiefComplaint: string;
-    selectedAntecedents: string[];
-    selectedAllergies: string[];
-    suggestedAllergies: string[];
-    selectedDrugs: string[];
-    suggestedDrugs: string[];
-    updatedAt: string;
-  };
-  suggestedAllergies: string[];
-  suggestedDrugs?: string[];
-  model: string;
-}
-
-interface AllergySuggestionResponse {
-  message: string;
-  suggestedAllergies: string[];
-  model: string;
-  record: {
-    age: number;
-    gender: Gender;
-    chiefComplaint: string;
-    selectedAntecedents: string[];
-    suggestedAllergies: string[];
-    selectedAllergies: string[];
-    suggestedDrugs: string[];
-    selectedDrugs: string[];
-    updatedAt: string;
-  };
-}
-
-interface SaveAllergiesResponse {
-  message: string;
-  record: {
-    age: number;
-    gender: Gender;
-    chiefComplaint: string;
-    selectedAntecedents: string[];
-    suggestedAllergies: string[];
-    selectedAllergies: string[];
-    suggestedDrugs: string[];
-    selectedDrugs: string[];
-    updatedAt: string;
-  };
-  suggestedDrugs: string[];
-  model: string;
-}
-
-interface DrugSuggestionResponse {
-  message: string;
-  suggestedDrugs: string[];
-  model: string;
-  record: {
-    age: number;
-    gender: Gender;
-    chiefComplaint: string;
-    selectedAntecedents: string[];
-    selectedAllergies: string[];
-    selectedDrugs: string[];
-    suggestedAllergies: string[];
-    suggestedDrugs: string[];
-    updatedAt: string;
-  };
-}
-
-interface SaveDrugsResponse {
-  message: string;
-  record: {
-    age: number;
-    gender: Gender;
-    chiefComplaint: string;
-    selectedAntecedents: string[];
-    selectedAllergies: string[];
-    selectedDrugs: string[];
-    suggestedAllergies: string[];
-    suggestedDrugs: string[];
-    updatedAt: string;
-  };
-}
-
-const API_BASE_URL = (globalThis as { APP_API_BASE_URL?: string }).APP_API_BASE_URL ?? 'http://localhost:3000';
+import { API_BASE_URL } from './config';
+import {
+  AllergySuggestionResponse,
+  DrugSuggestionResponse,
+  Gender,
+  SaveAllergiesResponse,
+  SaveAntecedentsResponse,
+  SaveDrugsResponse,
+  StartResponse,
+} from './models/intake.models';
+import { extractAntecedents, extractErrorMessage } from './utils/app-helpers';
 
 @Component({
   selector: 'app-root',
@@ -387,7 +305,7 @@ export class App {
       this.antecedentSaveMessage.set(`${baseMessage}${allergyDetails}`);
     } catch (error) {
       const genericFailure = 'Unable to save the confirmed antecedents. Please try again.';
-      const rawMessage = this.extractErrorMessage(error);
+      const rawMessage = extractErrorMessage(error);
       const message = rawMessage === 'Unable to submit the intake information. Please try again.' ? genericFailure : rawMessage;
       this.antecedentSaveError.set(message);
     } finally {
@@ -502,7 +420,7 @@ export class App {
       }
     } catch (error) {
       this.additionalAllergyFetches.set(previousAttempts);
-      const message = this.extractErrorMessage(error);
+      const message = extractErrorMessage(error);
       this.allergySaveError.set(message);
     } finally {
       this.isFetchingAllergies.set(false);
@@ -632,7 +550,7 @@ export class App {
       }
     } catch (error) {
       this.additionalDrugFetches.set(previousAttempts);
-      const message = this.extractErrorMessage(error);
+      const message = extractErrorMessage(error);
       this.drugSaveError.set(message);
     } finally {
       this.isFetchingDrugs.set(false);
@@ -680,7 +598,7 @@ export class App {
       this.customDrugText.set('');
       this.drugSaveMessage.set(response.message ?? 'Medicamentos confirmados guardados.');
     } catch (error) {
-      const message = this.extractErrorMessage(error);
+      const message = extractErrorMessage(error);
       this.drugSaveError.set(message);
     } finally {
       this.isSavingDrugs.set(false);
@@ -743,7 +661,7 @@ export class App {
       this.drugSaveError.set(null);
       this.hasSavedAllergies.set(true);
     } catch (error) {
-      const message = this.extractErrorMessage(error);
+      const message = extractErrorMessage(error);
       this.allergySaveError.set(message);
     } finally {
       this.isSavingAllergies.set(false);
@@ -802,7 +720,7 @@ export class App {
         this.http.post<StartResponse>(`${API_BASE_URL}/start`, payload)
       );
 
-      const antecedents = this.extractAntecedents(response.answer);
+      const antecedents = extractAntecedents(response.answer);
       const previousSeen = resetState ? new Set<string>() : new Set(this.seenAntecedents());
       const newSuggestions = antecedents.filter((item) => !previousSeen.has(item));
       const rawOptions = newSuggestions.length > 0 ? newSuggestions : antecedents;
@@ -827,67 +745,11 @@ export class App {
         this.additionalAntecedentFetches.update((count) => Math.min(count + 1, 2));
       }
     } catch (error) {
-      const message = this.extractErrorMessage(error);
+      const message = extractErrorMessage(error);
       this.submissionError.set(message);
     } finally {
       this.isSubmitting.set(false);
     }
   }
 
-  private extractAntecedents(answer: string): string[] {
-    const attemptParse = (value: string): string[] => {
-      try {
-        const parsed = JSON.parse(value);
-        if (Array.isArray(parsed) && parsed.every((item) => typeof item === 'string')) {
-          return parsed;
-        }
-      } catch {
-        // Ignore parse errors and fall back to next strategy.
-      }
-      return [];
-    };
-
-    const trimmedAnswer = answer.trim();
-
-    let antecedents = attemptParse(trimmedAnswer);
-    if (antecedents.length > 0) {
-      return antecedents;
-    }
-
-    const fencedMatch = trimmedAnswer.match(/```(?:json)?\s*([\s\S]*?)```/i);
-    if (fencedMatch?.[1]) {
-      antecedents = attemptParse(fencedMatch[1].trim());
-      if (antecedents.length > 0) {
-        return antecedents;
-      }
-    }
-
-    const startIndex = trimmedAnswer.indexOf('[');
-    const endIndex = trimmedAnswer.lastIndexOf(']');
-    if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
-      const bracketContent = trimmedAnswer.slice(startIndex, endIndex + 1);
-      antecedents = attemptParse(bracketContent);
-      if (antecedents.length > 0) {
-        return antecedents;
-      }
-    }
-
-    return [];
-  }
-
-  private extractErrorMessage(error: unknown): string {
-    if (error && typeof error === 'object' && 'error' in error) {
-      const serverError = (error as { error?: unknown }).error;
-      if (serverError && typeof serverError === 'object') {
-        if ('message' in serverError && typeof (serverError as { message?: unknown }).message === 'string') {
-          return (serverError as { message: string }).message;
-        }
-        if ('error' in serverError && typeof (serverError as { error?: unknown }).error === 'string') {
-          return (serverError as { error: string }).error;
-        }
-      }
-    }
-
-    return 'Unable to submit the intake information. Please try again.';
-  }
 }
