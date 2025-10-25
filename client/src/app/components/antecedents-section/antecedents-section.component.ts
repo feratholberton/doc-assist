@@ -22,6 +22,7 @@ export class AntecedentsSectionComponent {
   @Input({ required: true }) customList: ReadonlyArray<string> = [];
   @Input({ required: true }) customText = '';
   @Input() isSubmitting = false;
+  @Input() canRequestMore = true;
 
   @Output() requestMore = new EventEmitter<void>();
   @Output() toggleOption = new EventEmitter<ToggleAntecedentEvent>();

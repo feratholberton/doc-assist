@@ -25,7 +25,7 @@
         type="button"
         class="antecedents__actions-button"
         (click)="onRequestMore()"
-        [disabled]="isSubmitting"
+        [disabled]="isSubmitting || !canRequestMore"
       >
         {{ isSubmitting ? 'Solicitando nuevas opciones…' : 'Necesito otras opciones' }}
       </button>

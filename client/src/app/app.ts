@@ -34,6 +34,10 @@ export class App {
   protected readonly customAntecedentText = signal('');
   protected readonly customAntecedentsList = computed(() => Array.from(this.customAntecedents()));
   protected readonly selectedAntecedentsList = computed(() => Array.from(this.selectedAntecedents()));
+  protected readonly additionalAntecedentFetches = signal(0);
+  protected readonly canRequestMoreOptions = computed(
+    () => this.additionalAntecedentFetches() < 2 && this.antecedentOptions().length < 24
+  );
 
   private readonly fb = inject(FormBuilder);
   private readonly http = inject(HttpClient);
@@ -66,10 +70,15 @@ export class App {
     this.seenAntecedents.set(new Set());
     this.customAntecedents.set(new Set());
     this.customAntecedentText.set('');
+    this.additionalAntecedentFetches.set(0);
   }
 
   protected async requestMoreAntecedents(): Promise<void> {
     if (this.isSubmitting()) {
+      return;
+    }
+
+    if (!this.canRequestMoreOptions()) {
       return;
     }
 
@@ -149,6 +158,7 @@ export class App {
       this.customAntecedents.set(new Set());
       this.customAntecedentText.set('');
       this.seenAntecedents.set(new Set());
+      this.additionalAntecedentFetches.set(0);
     }
 
     const basePayload = this.intakeForm.getRawValue();
@@ -171,26 +181,21 @@ export class App {
       const updatedSeen = new Set(previousSeen);
       uniqueOptions.forEach((item) => updatedSeen.add(item));
 
-      this.antecedentOptions.set(uniqueOptions);
+      const currentOptions = resetState ? [] : this.antecedentOptions();
+      const mergedOptions = resetState
+        ? uniqueOptions
+        : [
+            ...currentOptions,
+            ...uniqueOptions.filter((item) => !currentOptions.includes(item))
+          ];
+      const cappedOptions = mergedOptions.slice(0, 24);
+
+      this.antecedentOptions.set(cappedOptions);
       this.seenAntecedents.set(updatedSeen);
       this.submissionResult.set(response);
 
       if (!resetState) {
-        this.selectedAntecedents.update((current) => {
-          const custom = this.customAntecedents();
-          const next = new Set<string>();
-          uniqueOptions.forEach((item) => {
-            if (current.has(item)) {
-              next.add(item);
-            }
-          });
-          custom.forEach((item) => {
-            if (current.has(item)) {
-              next.add(item);
-            }
-          });
-          return next;
-        });
+        this.additionalAntecedentFetches.update((count) => Math.min(count + 1, 2));
       }
     } catch (error) {
       const message = this.extractErrorMessage(error);

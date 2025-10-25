@@ -24,6 +24,7 @@
         [customList]="customAntecedentsList()"
         [customText]="customAntecedentText()"
         [isSubmitting]="isSubmitting()"
+        [canRequestMore]="canRequestMoreOptions()"
         (requestMore)="requestMoreAntecedents()"
         (toggleOption)="onAntecedentToggle($event.option, $event.checked)"
         (addCustom)="addCustomAntecedent()"
