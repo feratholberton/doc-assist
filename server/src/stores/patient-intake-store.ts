@@ -5,6 +5,8 @@ export interface PatientIntakeRecord {
   gender: PatientGender;
   chiefComplaint: string;
   selectedAntecedents: string[];
+  suggestedAllergies: string[];
+  selectedAllergies: string[];
   updatedAt: string;
 }
 
@@ -15,24 +17,45 @@ export const buildPatientKey = (age: number, gender: PatientGender, chiefComplai
 
 export const normalizeChiefComplaint = (chiefComplaint: string): string => chiefComplaint.trim();
 
-export const normalizeAntecedents = (antecedents: string[] | undefined): string[] =>
+const normalizeStringList = (values: string[] | undefined): string[] =>
   Array.from(
     new Set(
-      (antecedents ?? [])
+      (values ?? [])
         .map((item) => item.trim())
         .filter((item) => item.length > 0)
     )
   );
 
+export const normalizeAntecedents = (antecedents: string[] | undefined): string[] =>
+  normalizeStringList(antecedents);
+
+export const normalizeAllergies = (allergies: string[] | undefined): string[] => normalizeStringList(allergies);
+
 export const getPatientIntake = (key: string): PatientIntakeRecord | undefined => patientIntakeStore.get(key);
 
-export const upsertPatientIntake = (record: Omit<PatientIntakeRecord, 'updatedAt'>): PatientIntakeRecord => {
+export interface PatientIntakeUpdate {
+  age: number;
+  gender: PatientGender;
+  chiefComplaint: string;
+  selectedAntecedents?: string[];
+  suggestedAllergies?: string[];
+  selectedAllergies?: string[];
+}
+
+export const upsertPatientIntake = (update: PatientIntakeUpdate): PatientIntakeRecord => {
+  const key = buildPatientKey(update.age, update.gender, update.chiefComplaint);
+  const existing = patientIntakeStore.get(key);
+
   const updatedRecord: PatientIntakeRecord = {
-    ...record,
+    age: update.age,
+    gender: update.gender,
+    chiefComplaint: update.chiefComplaint,
+    selectedAntecedents: update.selectedAntecedents ?? existing?.selectedAntecedents ?? [],
+    suggestedAllergies: update.suggestedAllergies ?? existing?.suggestedAllergies ?? [],
+    selectedAllergies: update.selectedAllergies ?? existing?.selectedAllergies ?? [],
     updatedAt: new Date().toISOString()
   };
 
-  const key = buildPatientKey(record.age, record.gender, record.chiefComplaint);
   patientIntakeStore.set(key, updatedRecord);
   return updatedRecord;
 };

@@ -37,6 +37,26 @@
       />
     }
 
+    @if (allergyOptions().length > 0 || antecedentSaveMessage() || antecedentSaveError()) {
+      <app-allergies-section
+        [options]="allergyOptions()"
+        [selected]="selectedAllergiesList()"
+        [customList]="customAllergiesList()"
+        [customText]="customAllergyText()"
+        [canRequestMore]="canRequestMoreAllergies()"
+        [isFetching]="isFetchingAllergies()"
+        [isSaving]="isSavingAllergies()"
+        [saveMessage]="allergySaveMessage()"
+        [saveError]="allergySaveError()"
+        (toggleOption)="onAllergyToggle($event.option, $event.checked)"
+        (requestMore)="requestMoreAllergies()"
+        (addCustom)="addCustomAllergy()"
+        (customTextChange)="updateCustomAllergyText($event)"
+        (removeCustom)="removeCustomAllergy($event)"
+        (saveConfirmed)="saveConfirmedAllergies()"
+      />
+    }
+
     @if (submissionError(); as error) {
       <section class="result result--error">
         <h2>Submission Failed</h2>

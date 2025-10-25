@@ -5,6 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { PatientIntakeFormComponent } from './components/patient-intake-form/patient-intake-form.component';
 import { AntecedentsSectionComponent } from './components/antecedents-section/antecedents-section.component';
+import { AllergiesSectionComponent } from './components/allergies-section/allergies-section.component';
 
 type Gender = 'Male' | 'Female';
 
@@ -20,6 +21,38 @@ interface SaveAntecedentsResponse {
     gender: Gender;
     chiefComplaint: string;
     selectedAntecedents: string[];
+    selectedAllergies: string[];
+    suggestedAllergies: string[];
+    updatedAt: string;
+  };
+  suggestedAllergies: string[];
+  model: string;
+}
+
+interface AllergySuggestionResponse {
+  message: string;
+  suggestedAllergies: string[];
+  model: string;
+  record: {
+    age: number;
+    gender: Gender;
+    chiefComplaint: string;
+    selectedAntecedents: string[];
+    suggestedAllergies: string[];
+    selectedAllergies: string[];
+    updatedAt: string;
+  };
+}
+
+interface SaveAllergiesResponse {
+  message: string;
+  record: {
+    age: number;
+    gender: Gender;
+    chiefComplaint: string;
+    selectedAntecedents: string[];
+    suggestedAllergies: string[];
+    selectedAllergies: string[];
     updatedAt: string;
   };
 }
@@ -28,7 +61,13 @@ const API_BASE_URL = (globalThis as { APP_API_BASE_URL?: string }).APP_API_BASE_
 
 @Component({
   selector: 'app-root',
-  imports: [ReactiveFormsModule, CommonModule, PatientIntakeFormComponent, AntecedentsSectionComponent],
+  imports: [
+    ReactiveFormsModule,
+    CommonModule,
+    PatientIntakeFormComponent,
+    AntecedentsSectionComponent,
+    AllergiesSectionComponent
+  ],
   templateUrl: './app.html',
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -49,6 +88,21 @@ export class App {
   protected readonly canRequestMoreOptions = computed(
     () => this.additionalAntecedentFetches() < 2 && this.antecedentOptions().length < 24
   );
+  protected readonly allergyOptions = signal<string[]>([]);
+  protected readonly selectedAllergies = signal<Set<string>>(new Set());
+  protected readonly seenAllergies = signal<Set<string>>(new Set());
+  protected readonly customAllergies = signal<Set<string>>(new Set());
+  protected readonly customAllergyText = signal('');
+  protected readonly customAllergiesList = computed(() => Array.from(this.customAllergies()));
+  protected readonly selectedAllergiesList = computed(() => Array.from(this.selectedAllergies()));
+  protected readonly additionalAllergyFetches = signal(0);
+  protected readonly canRequestMoreAllergies = computed(
+    () => this.additionalAllergyFetches() < 2 && this.allergyOptions().length < 24
+  );
+  protected readonly isFetchingAllergies = signal(false);
+  protected readonly isSavingAllergies = signal(false);
+  protected readonly allergySaveMessage = signal<string | null>(null);
+  protected readonly allergySaveError = signal<string | null>(null);
   protected readonly isSavingAntecedents = signal(false);
   protected readonly antecedentSaveMessage = signal<string | null>(null);
   protected readonly antecedentSaveError = signal<string | null>(null);
@@ -85,6 +139,16 @@ export class App {
     this.customAntecedents.set(new Set());
     this.customAntecedentText.set('');
     this.additionalAntecedentFetches.set(0);
+    this.allergyOptions.set([]);
+    this.selectedAllergies.set(new Set());
+    this.seenAllergies.set(new Set());
+    this.customAllergies.set(new Set());
+    this.customAllergyText.set('');
+    this.additionalAllergyFetches.set(0);
+    this.isFetchingAllergies.set(false);
+    this.isSavingAllergies.set(false);
+    this.allergySaveMessage.set(null);
+    this.allergySaveError.set(null);
     this.isSavingAntecedents.set(false);
     this.antecedentSaveMessage.set(null);
     this.antecedentSaveError.set(null);
@@ -173,6 +237,20 @@ export class App {
     this.antecedentSaveError.set(null);
   }
 
+  protected onAllergyToggle(option: string, checked: boolean): void {
+    this.selectedAllergies.update((current) => {
+      const updated = new Set(current);
+      if (checked) {
+        updated.add(option);
+      } else {
+        updated.delete(option);
+      }
+      return updated;
+    });
+    this.allergySaveMessage.set(null);
+    this.allergySaveError.set(null);
+  }
+
   protected async saveConfirmedAntecedents(): Promise<void> {
     const selected = Array.from(this.selectedAntecedents());
     if (selected.length === 0) {
@@ -194,8 +272,28 @@ export class App {
       const response = await firstValueFrom(
         this.http.post<SaveAntecedentsResponse>(`${API_BASE_URL}/antecedents`, payload)
       );
-      const successMessage = response.message ?? 'Antecedentes confirmados guardados.';
-      this.antecedentSaveMessage.set(successMessage);
+      const baseMessage = response.message ?? 'Antecedentes confirmados guardados.';
+      const suggestedAllergies = response.suggestedAllergies ?? [];
+      this.allergyOptions.set(suggestedAllergies);
+      this.seenAllergies.set(new Set(suggestedAllergies));
+      const normalizedSelectedAllergies = response.record.selectedAllergies ?? [];
+      this.selectedAllergies.set(new Set(normalizedSelectedAllergies));
+      const customAllergies = normalizedSelectedAllergies.filter(
+        (item) => !suggestedAllergies.includes(item)
+      );
+      this.customAllergies.set(new Set(customAllergies));
+      this.customAllergyText.set('');
+      this.additionalAllergyFetches.set(0);
+      this.isFetchingAllergies.set(false);
+      this.isSavingAllergies.set(false);
+      this.allergySaveMessage.set(null);
+      this.allergySaveError.set(null);
+
+      const allergyDetails =
+        suggestedAllergies.length > 0
+          ? ` Alergias sugeridas: ${suggestedAllergies.join(', ')}.`
+          : ' No se sugirieron alergias.';
+      this.antecedentSaveMessage.set(`${baseMessage}${allergyDetails}`);
     } catch (error) {
       const genericFailure = 'Unable to save the confirmed antecedents. Please try again.';
       const rawMessage = this.extractErrorMessage(error);
@@ -203,6 +301,165 @@ export class App {
       this.antecedentSaveError.set(message);
     } finally {
       this.isSavingAntecedents.set(false);
+    }
+  }
+
+  protected addCustomAllergy(): void {
+    const value = this.customAllergyText().trim();
+    if (!value) {
+      return;
+    }
+
+    const alreadySelected = this.selectedAllergies().has(value);
+    if (alreadySelected) {
+      this.customAllergyText.set('');
+      return;
+    }
+
+    this.customAllergies.update((current) => {
+      const updated = new Set(current);
+      updated.add(value);
+      return updated;
+    });
+
+    this.selectedAllergies.update((current) => {
+      const updated = new Set(current);
+      updated.add(value);
+      return updated;
+    });
+
+    this.customAllergyText.set('');
+    this.allergySaveMessage.set(null);
+    this.allergySaveError.set(null);
+  }
+
+  protected updateCustomAllergyText(value: string): void {
+    this.customAllergyText.set(value);
+  }
+
+  protected removeCustomAllergy(value: string): void {
+    this.customAllergies.update((current) => {
+      const updated = new Set(current);
+      updated.delete(value);
+      return updated;
+    });
+
+    this.selectedAllergies.update((current) => {
+      const updated = new Set(current);
+      updated.delete(value);
+      return updated;
+    });
+
+    this.allergySaveMessage.set(null);
+    this.allergySaveError.set(null);
+  }
+
+  protected async requestMoreAllergies(): Promise<void> {
+    if (this.isFetchingAllergies() || !this.canRequestMoreAllergies()) {
+      return;
+    }
+
+    const previousAttempts = this.additionalAllergyFetches();
+    this.additionalAllergyFetches.set(previousAttempts + 1);
+    this.isFetchingAllergies.set(true);
+    this.allergySaveMessage.set(null);
+    this.allergySaveError.set(null);
+
+    const payload = {
+      ...this.intakeForm.getRawValue(),
+      selectedAntecedents: Array.from(this.selectedAntecedents()),
+      selectedAllergies: Array.from(this.selectedAllergies()),
+      excludeAllergies: Array.from(this.seenAllergies())
+    };
+
+    try {
+      const response = await firstValueFrom(
+        this.http.post<AllergySuggestionResponse>(`${API_BASE_URL}/allergies/suggest`, payload)
+      );
+
+      const newSuggestions = response.suggestedAllergies ?? [];
+      if (newSuggestions.length > 0) {
+        this.allergyOptions.update((current) => {
+          const merged = [
+            ...current,
+            ...newSuggestions.filter((item) => !current.includes(item))
+          ];
+          return merged.slice(0, 24);
+        });
+
+        this.seenAllergies.update((current) => {
+          const updated = new Set(current);
+          newSuggestions.forEach((item) => updated.add(item));
+          return updated;
+        });
+        if (response.message) {
+          this.allergySaveMessage.set(response.message);
+        }
+      } else if (response.message) {
+        this.allergySaveMessage.set(response.message);
+      }
+
+      const record = response.record;
+      if (record) {
+        this.allergyOptions.set(record.suggestedAllergies);
+        this.seenAllergies.set(new Set(record.suggestedAllergies));
+        this.selectedAllergies.set(new Set(record.selectedAllergies));
+        const customItems = record.selectedAllergies.filter(
+          (item) => !record.suggestedAllergies.includes(item)
+        );
+        this.customAllergies.set(new Set(customItems));
+      }
+    } catch (error) {
+      this.additionalAllergyFetches.set(previousAttempts);
+      const message = this.extractErrorMessage(error);
+      this.allergySaveError.set(message);
+    } finally {
+      this.isFetchingAllergies.set(false);
+    }
+  }
+
+  protected async saveConfirmedAllergies(): Promise<void> {
+    const combinedSelections = new Set([
+      ...this.selectedAllergies(),
+      ...this.customAllergies()
+    ]);
+
+    if (combinedSelections.size === 0) {
+      this.allergySaveError.set('Selecciona o agrega al menos una alergia antes de guardar.');
+      this.allergySaveMessage.set(null);
+      return;
+    }
+
+    this.isSavingAllergies.set(true);
+    this.allergySaveMessage.set(null);
+    this.allergySaveError.set(null);
+
+    const payload = {
+      ...this.intakeForm.getRawValue(),
+      selectedAntecedents: Array.from(this.selectedAntecedents()),
+      selectedAllergies: Array.from(combinedSelections)
+    };
+
+    try {
+      const response = await firstValueFrom(
+        this.http.post<SaveAllergiesResponse>(`${API_BASE_URL}/allergies`, payload)
+      );
+
+      const record = response.record;
+      this.allergyOptions.set(record.suggestedAllergies);
+      this.seenAllergies.set(new Set(record.suggestedAllergies));
+      this.selectedAllergies.set(new Set(record.selectedAllergies));
+      const customItems = record.selectedAllergies.filter(
+        (item) => !record.suggestedAllergies.includes(item)
+      );
+      this.customAllergies.set(new Set(customItems));
+      this.customAllergyText.set('');
+      this.allergySaveMessage.set(response.message ?? 'Alergias confirmadas guardadas.');
+    } catch (error) {
+      const message = this.extractErrorMessage(error);
+      this.allergySaveError.set(message);
+    } finally {
+      this.isSavingAllergies.set(false);
     }
   }
 
@@ -220,6 +477,16 @@ export class App {
       this.customAntecedentText.set('');
       this.seenAntecedents.set(new Set());
       this.additionalAntecedentFetches.set(0);
+      this.allergyOptions.set([]);
+      this.selectedAllergies.set(new Set());
+      this.seenAllergies.set(new Set());
+      this.customAllergies.set(new Set());
+      this.customAllergyText.set('');
+      this.additionalAllergyFetches.set(0);
+      this.isFetchingAllergies.set(false);
+      this.isSavingAllergies.set(false);
+      this.allergySaveMessage.set(null);
+      this.allergySaveError.set(null);
     }
 
     const basePayload = this.intakeForm.getRawValue();
