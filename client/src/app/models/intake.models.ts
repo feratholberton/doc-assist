@@ -333,4 +333,5 @@ export interface SaveRedFlagsResponse {
     updatedAt: string;
   };
   redFlagsQuestions: SymptomOnsetQuestion[];
+  reviewSummary: string;
 }

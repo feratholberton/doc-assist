@@ -1,0 +1,20 @@
+<section class="section" aria-labelledby="review-heading">
+  <h2 id="review-heading" class="section__title">Review all answers</h2>
+
+  <div class="review">
+    <pre class="review__content">{{ content }}</pre>
+  </div>
+
+  <div class="actions">
+    <button class="btn" (click)="onCopy()" [disabled]="isCopying">
+      {{ isCopying ? 'Copying…' : 'Copy' }}
+    </button>
+  </div>
+
+  @if (copyMessage) {
+    <p class="status status--success">{{ copyMessage }}</p>
+  }
+  @if (copyError) {
+    <p class="status status--error">{{ copyError }}</p>
+  }
+</section>

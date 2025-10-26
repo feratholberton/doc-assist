@@ -16,6 +16,7 @@ import { RecentExposuresSectionComponent } from './components/recent-exposures-s
 import { FunctionalImpactSectionComponent } from './components/functional-impact-section/functional-impact-section.component';
 import { PriorTherapiesSectionComponent } from './components/prior-therapies-section/prior-therapies-section.component';
 import { RedFlagsSectionComponent } from './components/red-flags-section/red-flags-section.component';
+import { ReviewPanelComponent } from './components/review-panel/review-panel.component';
 import { API_BASE_URL } from './config';
 import {
   AllergySuggestionResponse,
@@ -49,6 +50,7 @@ import { IntakeService } from './services/intake.service';
     ,FunctionalImpactSectionComponent
     ,PriorTherapiesSectionComponent
     ,RedFlagsSectionComponent
+    ,ReviewPanelComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -141,6 +143,10 @@ export class App {
   protected readonly isSavingRedFlags = signal(false);
   protected readonly redFlagsSaveMessage = signal<string | null>(null);
   protected readonly redFlagsSaveError = signal<string | null>(null);
+  protected readonly reviewSummary = signal<string | null>(null);
+  protected readonly isCopyingReview = signal(false);
+  protected readonly copyMessage = signal<string | null>(null);
+  protected readonly copyError = signal<string | null>(null);
   protected readonly isSavingAntecedents = signal(false);
   protected readonly antecedentSaveMessage = signal<string | null>(null);
   protected readonly antecedentSaveError = signal<string | null>(null);
@@ -238,6 +244,10 @@ export class App {
   this.isSavingRedFlags.set(false);
   this.redFlagsSaveMessage.set(null);
   this.redFlagsSaveError.set(null);
+  this.reviewSummary.set(null);
+  this.isCopyingReview.set(false);
+  this.copyMessage.set(null);
+  this.copyError.set(null);
     this.isSavingAntecedents.set(false);
     this.antecedentSaveMessage.set(null);
     this.antecedentSaveError.set(null);
@@ -1050,11 +1060,47 @@ export class App {
       );
       this.redFlagsQuestions.set(merged);
       this.redFlagsSaveMessage.set(response.message ?? 'Síntomas de alarma guardados.');
+      if (response.reviewSummary) {
+        this.reviewSummary.set(response.reviewSummary);
+      }
     } catch (error) {
       const message = extractErrorMessage(error);
       this.redFlagsSaveError.set(message);
     } finally {
       this.isSavingRedFlags.set(false);
+    }
+  }
+
+  protected async copyReviewToClipboard(): Promise<void> {
+    const content = this.reviewSummary() ?? '';
+    if (!content) {
+      this.copyError.set('No hay contenido para copiar.');
+      this.copyMessage.set(null);
+      return;
+    }
+    this.isCopyingReview.set(true);
+    this.copyMessage.set(null);
+    this.copyError.set(null);
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(content);
+      } else {
+        // Fallback: create a temporary textarea
+        const ta = document.createElement('textarea');
+        ta.value = content;
+        ta.style.position = 'fixed';
+        ta.style.left = '-1000px';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      this.copyMessage.set('Contenido copiado al portapapeles.');
+    } catch (e) {
+      this.copyError.set('No se pudo copiar el contenido.');
+    } finally {
+      this.isCopyingReview.set(false);
     }
   }
 
@@ -1360,6 +1406,10 @@ export class App {
       this.isSavingRedFlags.set(false);
       this.redFlagsSaveMessage.set(null);
       this.redFlagsSaveError.set(null);
+      this.reviewSummary.set(null);
+      this.isCopyingReview.set(false);
+      this.copyMessage.set(null);
+      this.copyError.set(null);
     }
 
     const basePayload = this.intakeForm.getRawValue();

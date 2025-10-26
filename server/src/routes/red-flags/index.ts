@@ -19,6 +19,7 @@ interface SaveRedFlagsResponseBody {
   message: string;
   record: PatientIntakeRecord;
   redFlagsQuestions: SymptomOnsetQuestion[];
+  reviewSummary: string;
 }
 
 const redFlagsRoute: FastifyPluginAsync = async (fastify) => {
@@ -50,7 +51,7 @@ const redFlagsRoute: FastifyPluginAsync = async (fastify) => {
         response: {
           200: {
             type: 'object',
-            required: ['message', 'record', 'redFlagsQuestions'],
+            required: ['message', 'record', 'redFlagsQuestions', 'reviewSummary'],
             properties: {
               message: { type: 'string' },
               record: {
@@ -219,7 +220,8 @@ const redFlagsRoute: FastifyPluginAsync = async (fastify) => {
                     answer: { type: 'string' }
                   }
                 }
-              }
+              },
+              reviewSummary: { type: 'string' }
             }
           }
         }
@@ -249,10 +251,50 @@ const redFlagsRoute: FastifyPluginAsync = async (fastify) => {
 
       request.log.debug({ key, updatedQuestions }, 'Saved red flag symptoms answers')
 
+      // Build review summary text
+      const lines: string[] = []
+      lines.push('# Resumen de respuestas del formulario clínico')
+      lines.push('')
+      lines.push(`Edad: ${record.age}`)
+      lines.push(`Género: ${record.gender}`)
+      lines.push(`Motivo de consulta: ${record.chiefComplaint}`)
+      lines.push('')
+      const list = (title: string, items: string[]) => {
+        lines.push(`## ${title}`)
+        lines.push(items.length ? `- ${items.join(', ')}` : '- (sin datos)')
+        lines.push('')
+      }
+      list('Antecedentes', record.selectedAntecedents ?? [])
+      list('Alergias', record.selectedAllergies ?? [])
+      list('Medicamentos', record.selectedDrugs ?? [])
+
+      const qa = (title: string, qs?: SymptomOnsetQuestion[]) => {
+        if (!qs || qs.length === 0) return
+        lines.push(`## ${title}`)
+        for (const q of qs) {
+          lines.push(`- ${q.prompt}`)
+          lines.push(`  Respuesta: ${q.answer ?? ''}`)
+        }
+        lines.push('')
+      }
+      qa('Inicio de síntomas', record.symptomOnsetQuestions)
+      qa('Evaluación y curso', record.evaluationQuestions)
+      qa('Localización', record.locationQuestions)
+      qa('Características del síntoma', record.characteristicsQuestions)
+      qa('Síntomas asociados', record.associatedSymptomsQuestions)
+      qa('Factores precipitantes y contexto', record.precipitatingFactorsQuestions)
+      qa('Exposiciones y contactos recientes', record.recentExposuresQuestions)
+      qa('Impacto funcional y calidad de vida', record.functionalImpactQuestions)
+      qa('Tratamientos previos y automedicación', record.priorTherapiesQuestions)
+      qa('Síntomas de alarma', record.redFlagsQuestions)
+
+      const reviewSummary = lines.join('\n')
+
       return {
         message: 'Síntomas de alarma guardados.',
         record,
-        redFlagsQuestions: record.redFlagsQuestions
+        redFlagsQuestions: record.redFlagsQuestions,
+        reviewSummary
       }
     }
   )

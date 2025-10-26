@@ -195,6 +195,16 @@
       />
     }
 
+    @if (reviewSummary(); as summary) {
+      <app-review-panel
+        [content]="summary"
+        [isCopying]="isCopyingReview()"
+        [copyMessage]="copyMessage()"
+        [copyError]="copyError()"
+        (copyRequested)="copyReviewToClipboard()"
+      />
+    }
+
     @if (submissionError(); as error) {
       <section class="result result--error">
         <h2>Submission Failed</h2>
