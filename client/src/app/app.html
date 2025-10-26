@@ -8,204 +8,204 @@
     </header>
 
     <app-patient-intake-form
-      [intakeForm]="intakeForm"
-      [genders]="genders()"
-      [isSubmitting]="isSubmitting()"
-      (submitForm)="submit()"
-      (resetForm)="resetForm()"
+      [intakeForm]="facade.intakeForm"
+      [genders]="facade.genders()"
+      [isSubmitting]="facade.isSubmitting()"
+      (submitForm)="facade.submit()"
+      (resetForm)="facade.resetForm()"
     />
 
-    @if (submissionResult(); as result) {
+    @if (facade.submissionResult(); as result) {
       <app-antecedents-section
         [model]="result.model"
         [answer]="result.answer"
-        [options]="antecedentOptions()"
-        [selected]="selectedAntecedentsList()"
-        [customList]="customAntecedentsList()"
-        [customText]="customAntecedentText()"
-        [isSubmitting]="isSubmitting()"
-        [canRequestMore]="canRequestMoreOptions()"
-        [isSaving]="isSavingAntecedents()"
-        [saveMessage]="antecedentSaveMessage()"
-        [saveError]="antecedentSaveError()"
-        (requestMore)="requestMoreAntecedents()"
-        (toggleOption)="onAntecedentToggle($event.option, $event.checked)"
-        (addCustom)="addCustomAntecedent()"
-        (customTextChange)="updateCustomAntecedentText($event)"
-        (removeCustom)="removeCustomAntecedent($event)"
-        (saveConfirmed)="saveConfirmedAntecedents()"
+        [options]="facade.antecedentOptions()"
+        [selected]="facade.selectedAntecedentsList()"
+        [customList]="facade.customAntecedentsList()"
+        [customText]="facade.customAntecedentText()"
+        [isSubmitting]="facade.isSubmitting()"
+        [canRequestMore]="facade.canRequestMoreOptions()"
+        [isSaving]="facade.isSavingAntecedents()"
+        [saveMessage]="facade.antecedentSaveMessage()"
+        [saveError]="facade.antecedentSaveError()"
+        (requestMore)="facade.requestMoreAntecedents()"
+        (toggleOption)="facade.onAntecedentToggle($event.option, $event.checked)"
+        (addCustom)="facade.addCustomAntecedent()"
+        (customTextChange)="facade.updateCustomAntecedentText($event)"
+        (removeCustom)="facade.removeCustomAntecedent($event)"
+        (saveConfirmed)="facade.saveConfirmedAntecedents()"
       />
     }
 
-    @if (allergyOptions().length > 0 || antecedentSaveMessage() || antecedentSaveError()) {
+    @if (facade.allergyOptions().length > 0 || facade.antecedentSaveMessage() || facade.antecedentSaveError()) {
       <app-allergies-section
-        [options]="allergyOptions()"
-        [selected]="selectedAllergiesList()"
-        [customList]="customAllergiesList()"
-        [customText]="customAllergyText()"
-        [canRequestMore]="canRequestMoreAllergies()"
-        [isFetching]="isFetchingAllergies()"
-        [isSaving]="isSavingAllergies()"
-        [saveMessage]="allergySaveMessage()"
-        [saveError]="allergySaveError()"
-        (toggleOption)="onAllergyToggle($event.option, $event.checked)"
-        (requestMore)="requestMoreAllergies()"
-        (addCustom)="addCustomAllergy()"
-        (customTextChange)="updateCustomAllergyText($event)"
-        (removeCustom)="removeCustomAllergy($event)"
-        (saveConfirmed)="saveConfirmedAllergies()"
+        [options]="facade.allergyOptions()"
+        [selected]="facade.selectedAllergiesList()"
+        [customList]="facade.customAllergiesList()"
+        [customText]="facade.customAllergyText()"
+        [canRequestMore]="facade.canRequestMoreAllergies()"
+        [isFetching]="facade.isFetchingAllergies()"
+        [isSaving]="facade.isSavingAllergies()"
+        [saveMessage]="facade.allergySaveMessage()"
+        [saveError]="facade.allergySaveError()"
+        (toggleOption)="facade.onAllergyToggle($event.option, $event.checked)"
+        (requestMore)="facade.requestMoreAllergies()"
+        (addCustom)="facade.addCustomAllergy()"
+        (customTextChange)="facade.updateCustomAllergyText($event)"
+        (removeCustom)="facade.removeCustomAllergy($event)"
+        (saveConfirmed)="facade.saveConfirmedAllergies()"
       />
     }
 
     @if (
-      hasSavedAllergies() && (
-        drugOptions().length > 0 ||
-        customDrugsList().length > 0 ||
-        selectedDrugsList().length > 0 ||
-        drugSaveMessage() ||
-        drugSaveError()
+      facade.hasSavedAllergies() && (
+        facade.drugOptions().length > 0 ||
+        facade.customDrugsList().length > 0 ||
+        facade.selectedDrugsList().length > 0 ||
+        facade.drugSaveMessage() ||
+        facade.drugSaveError()
       )
     ) {
       <app-drugs-section
-        [options]="drugOptions()"
-        [selected]="selectedDrugsList()"
-        [customList]="customDrugsList()"
-        [customText]="customDrugText()"
-        [canRequestMore]="canRequestMoreDrugs()"
-        [isFetching]="isFetchingDrugs()"
-        [isSaving]="isSavingDrugs()"
-        [saveMessage]="drugSaveMessage()"
-        [saveError]="drugSaveError()"
-        (toggleOption)="onDrugToggle($event.option, $event.checked)"
-        (requestMore)="requestMoreDrugs()"
-        (addCustom)="addCustomDrug()"
-        (customTextChange)="updateCustomDrugText($event)"
-        (removeCustom)="removeCustomDrug($event)"
-        (saveConfirmed)="saveConfirmedDrugs()"
+        [options]="facade.drugOptions()"
+        [selected]="facade.selectedDrugsList()"
+        [customList]="facade.customDrugsList()"
+        [customText]="facade.customDrugText()"
+        [canRequestMore]="facade.canRequestMoreDrugs()"
+        [isFetching]="facade.isFetchingDrugs()"
+        [isSaving]="facade.isSavingDrugs()"
+        [saveMessage]="facade.drugSaveMessage()"
+        [saveError]="facade.drugSaveError()"
+        (toggleOption)="facade.onDrugToggle($event.option, $event.checked)"
+        (requestMore)="facade.requestMoreDrugs()"
+        (addCustom)="facade.addCustomDrug()"
+        (customTextChange)="facade.updateCustomDrugText($event)"
+        (removeCustom)="facade.removeCustomDrug($event)"
+        (saveConfirmed)="facade.saveConfirmedDrugs()"
       />
     }
 
-    @if (symptomOnsetQuestions().length > 0) {
+    @if (facade.symptomOnsetQuestions().length > 0) {
       <app-symptom-onset-section
-        [questions]="symptomOnsetQuestions()"
-        [isSaving]="isSavingSymptomOnset()"
-        [saveMessage]="symptomOnsetSaveMessage()"
-        [saveError]="symptomOnsetSaveError()"
-        (answerChange)="updateSymptomOnsetAnswer($event.id, $event.value)"
-        (saveConfirmed)="saveSymptomOnset()"
+        [questions]="facade.symptomOnsetQuestions()"
+        [isSaving]="facade.isSavingSymptomOnset()"
+        [saveMessage]="facade.symptomOnsetSaveMessage()"
+        [saveError]="facade.symptomOnsetSaveError()"
+        (answerChange)="facade.updateSymptomOnsetAnswer($event.id, $event.value)"
+        (saveConfirmed)="facade.saveSymptomOnset()"
       />
     }
 
-    @if (evaluationQuestions().length > 0) {
+    @if (facade.evaluationQuestions().length > 0) {
       <app-evaluation-section
-        [questions]="evaluationQuestions()"
-        [isSaving]="isSavingEvaluation()"
-        [saveMessage]="evaluationSaveMessage()"
-        [saveError]="evaluationSaveError()"
-        (answerChange)="updateEvaluationAnswer($event.id, $event.value)"
-        (saveConfirmed)="saveEvaluation()"
+        [questions]="facade.evaluationQuestions()"
+        [isSaving]="facade.isSavingEvaluation()"
+        [saveMessage]="facade.evaluationSaveMessage()"
+        [saveError]="facade.evaluationSaveError()"
+        (answerChange)="facade.updateEvaluationAnswer($event.id, $event.value)"
+        (saveConfirmed)="facade.saveEvaluation()"
       />
     }
 
-    @if (locationQuestions().length > 0) {
+    @if (facade.locationQuestions().length > 0) {
       <app-location-section
-        [questions]="locationQuestions()"
-        [isSaving]="isSavingLocation()"
-        [saveMessage]="locationSaveMessage()"
-        [saveError]="locationSaveError()"
-        (answerChange)="updateLocationAnswer($event.id, $event.value)"
-        (saveConfirmed)="saveLocation()"
+        [questions]="facade.locationQuestions()"
+        [isSaving]="facade.isSavingLocation()"
+        [saveMessage]="facade.locationSaveMessage()"
+        [saveError]="facade.locationSaveError()"
+        (answerChange)="facade.updateLocationAnswer($event.id, $event.value)"
+        (saveConfirmed)="facade.saveLocation()"
       />
     }
 
-    @if (characteristicsQuestions().length > 0) {
+    @if (facade.characteristicsQuestions().length > 0) {
       <app-characteristics-section
-        [questions]="characteristicsQuestions()"
-        [isSaving]="isSavingCharacteristics()"
-        [saveMessage]="characteristicsSaveMessage()"
-        [saveError]="characteristicsSaveError()"
-        (answerChange)="updateCharacteristicsAnswer($event.id, $event.value)"
-        (saveConfirmed)="saveCharacteristics()"
+        [questions]="facade.characteristicsQuestions()"
+        [isSaving]="facade.isSavingCharacteristics()"
+        [saveMessage]="facade.characteristicsSaveMessage()"
+        [saveError]="facade.characteristicsSaveError()"
+        (answerChange)="facade.updateCharacteristicsAnswer($event.id, $event.value)"
+        (saveConfirmed)="facade.saveCharacteristics()"
       />
     }
 
-    @if (associatedSymptomsQuestions().length > 0) {
+    @if (facade.associatedSymptomsQuestions().length > 0) {
       <app-associated-symptoms-section
-        [questions]="associatedSymptomsQuestions()"
-        [isSaving]="isSavingAssociated()"
-        [saveMessage]="associatedSaveMessage()"
-        [saveError]="associatedSaveError()"
-        (answerChange)="updateAssociatedAnswer($event.id, $event.value)"
-        (saveConfirmed)="saveAssociated()"
+        [questions]="facade.associatedSymptomsQuestions()"
+        [isSaving]="facade.isSavingAssociated()"
+        [saveMessage]="facade.associatedSaveMessage()"
+        [saveError]="facade.associatedSaveError()"
+        (answerChange)="facade.updateAssociatedAnswer($event.id, $event.value)"
+        (saveConfirmed)="facade.saveAssociated()"
       />
     }
 
-    @if (precipitatingFactorsQuestions().length > 0) {
+    @if (facade.precipitatingFactorsQuestions().length > 0) {
       <app-precipitating-factors-section
-        [questions]="precipitatingFactorsQuestions()"
-        [isSaving]="isSavingPrecipitating()"
-        [saveMessage]="precipitatingSaveMessage()"
-        [saveError]="precipitatingSaveError()"
-        (answerChange)="updatePrecipitatingAnswer($event.id, $event.value)"
-        (saveConfirmed)="savePrecipitating()"
+        [questions]="facade.precipitatingFactorsQuestions()"
+        [isSaving]="facade.isSavingPrecipitating()"
+        [saveMessage]="facade.precipitatingSaveMessage()"
+        [saveError]="facade.precipitatingSaveError()"
+        (answerChange)="facade.updatePrecipitatingAnswer($event.id, $event.value)"
+        (saveConfirmed)="facade.savePrecipitating()"
       />
     }
 
-    @if (recentExposuresQuestions().length > 0) {
+    @if (facade.recentExposuresQuestions().length > 0) {
       <app-recent-exposures-section
-        [questions]="recentExposuresQuestions()"
-        [isSaving]="isSavingRecentExposures()"
-        [saveMessage]="recentExposuresSaveMessage()"
-        [saveError]="recentExposuresSaveError()"
-        (answerChange)="updateRecentExposuresAnswer($event.id, $event.value)"
-        (saveConfirmed)="saveRecentExposures()"
+        [questions]="facade.recentExposuresQuestions()"
+        [isSaving]="facade.isSavingRecentExposures()"
+        [saveMessage]="facade.recentExposuresSaveMessage()"
+        [saveError]="facade.recentExposuresSaveError()"
+        (answerChange)="facade.updateRecentExposuresAnswer($event.id, $event.value)"
+        (saveConfirmed)="facade.saveRecentExposures()"
       />
     }
 
-    @if (functionalImpactQuestions().length > 0) {
+    @if (facade.functionalImpactQuestions().length > 0) {
       <app-functional-impact-section
-        [questions]="functionalImpactQuestions()"
-        [isSaving]="isSavingFunctionalImpact()"
-        [saveMessage]="functionalImpactSaveMessage()"
-        [saveError]="functionalImpactSaveError()"
-        (answerChange)="updateFunctionalImpactAnswer($event.id, $event.value)"
-        (saveConfirmed)="saveFunctionalImpact()"
+        [questions]="facade.functionalImpactQuestions()"
+        [isSaving]="facade.isSavingFunctionalImpact()"
+        [saveMessage]="facade.functionalImpactSaveMessage()"
+        [saveError]="facade.functionalImpactSaveError()"
+        (answerChange)="facade.updateFunctionalImpactAnswer($event.id, $event.value)"
+        (saveConfirmed)="facade.saveFunctionalImpact()"
       />
     }
 
-    @if (priorTherapiesQuestions().length > 0) {
+    @if (facade.priorTherapiesQuestions().length > 0) {
       <app-prior-therapies-section
-        [questions]="priorTherapiesQuestions()"
-        [isSaving]="isSavingPriorTherapies()"
-        [saveMessage]="priorTherapiesSaveMessage()"
-        [saveError]="priorTherapiesSaveError()"
-        (answerChange)="updatePriorTherapiesAnswer($event.id, $event.value)"
-        (saveConfirmed)="savePriorTherapies()"
+        [questions]="facade.priorTherapiesQuestions()"
+        [isSaving]="facade.isSavingPriorTherapies()"
+        [saveMessage]="facade.priorTherapiesSaveMessage()"
+        [saveError]="facade.priorTherapiesSaveError()"
+        (answerChange)="facade.updatePriorTherapiesAnswer($event.id, $event.value)"
+        (saveConfirmed)="facade.savePriorTherapies()"
       />
     }
 
-    @if (redFlagsQuestions().length > 0) {
+    @if (facade.redFlagsQuestions().length > 0) {
       <app-red-flags-section
-        [questions]="redFlagsQuestions()"
-        [isSaving]="isSavingRedFlags()"
-        [saveMessage]="redFlagsSaveMessage()"
-        [saveError]="redFlagsSaveError()"
-        (answerChange)="updateRedFlagsAnswer($event.id, $event.value)"
-        (saveConfirmed)="saveRedFlags()"
+        [questions]="facade.redFlagsQuestions()"
+        [isSaving]="facade.isSavingRedFlags()"
+        [saveMessage]="facade.redFlagsSaveMessage()"
+        [saveError]="facade.redFlagsSaveError()"
+        (answerChange)="facade.updateRedFlagsAnswer($event.id, $event.value)"
+        (saveConfirmed)="facade.saveRedFlags()"
       />
     }
 
-    @if (reviewSummary(); as summary) {
+    @if (facade.reviewSummary(); as summary) {
       <app-review-panel
         [content]="summary"
-        [isCopying]="isCopyingReview()"
-        [copyMessage]="copyMessage()"
-        [copyError]="copyError()"
-        (copyRequested)="copyReviewToClipboard()"
+        [isCopying]="facade.isCopyingReview()"
+        [copyMessage]="facade.copyMessage()"
+        [copyError]="facade.copyError()"
+        (copyRequested)="facade.copyReviewToClipboard()"
       />
     }
 
-    @if (submissionError(); as error) {
+    @if (facade.submissionError(); as error) {
       <section class="result result--error">
         <h2>Submission Failed</h2>
         <p>{{ error }}</p>

@@ -4,6 +4,8 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideHttpClient, withFetch } from '@angular/common/http';
+import { IntakeRepository } from './application/ports/intake.repository';
+import { HttpIntakeRepository } from './infrastructure/http/repositories/http-intake.repository';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -11,6 +13,7 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(routes),
     provideClientHydration(withEventReplay()),
-    provideHttpClient(withFetch())
+    provideHttpClient(withFetch()),
+    { provide: IntakeRepository, useExisting: HttpIntakeRepository }
   ]
 };
