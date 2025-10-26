@@ -1,0 +1,38 @@
+<section class="location" aria-labelledby="location-heading">
+  <header class="location__header">
+    <h2 id="location-heading">Localización y características espaciales</h2>
+    <p class="location__description">
+      Describe la localización del síntoma principal y sus características espaciales.
+    </p>
+  </header>
+
+  <div class="location__list">
+    @for (question of questions; track question.id) {
+      <div class="location__item">
+        <label class="location__label" [for]="question.id">{{ question.prompt }}</label>
+        <textarea
+          class="location__input"
+          rows="2"
+          [id]="question.id"
+          #answerInput
+          [value]="question.answer"
+          (input)="onInputChange(question, answerInput.value)"
+        ></textarea>
+      </div>
+    }
+  </div>
+
+  <div class="location__actions">
+    <button type="button" class="location__save" (click)="onSave()" [disabled]="isSaving">
+      {{ isSaving ? 'Guardando…' : 'Guardar localización y características' }}
+    </button>
+
+    @if (saveMessage) {
+      <p class="location__message location__message--success">{{ saveMessage }}</p>
+    }
+
+    @if (saveError) {
+      <p class="location__message location__message--error">{{ saveError }}</p>
+    }
+  </div>
+</section>

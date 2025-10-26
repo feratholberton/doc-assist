@@ -8,6 +8,7 @@ import { AllergiesSectionComponent } from './components/allergies-section/allerg
 import { DrugsSectionComponent } from './components/drugs-section/drugs-section.component';
 import { SymptomOnsetSectionComponent } from './components/symptom-onset-section/symptom-onset-section.component';
 import { EvaluationSectionComponent } from './components/evaluation-section/evaluation-section.component';
+import { LocationSectionComponent } from './components/location-section/location-section.component';
 import { API_BASE_URL } from './config';
 import {
   AllergySuggestionResponse,
@@ -32,7 +33,8 @@ import { IntakeService } from './services/intake.service';
     AllergiesSectionComponent,
     DrugsSectionComponent,
     SymptomOnsetSectionComponent,
-    EvaluationSectionComponent
+    EvaluationSectionComponent,
+    LocationSectionComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -93,6 +95,10 @@ export class App {
   protected readonly isSavingEvaluation = signal(false);
   protected readonly evaluationSaveMessage = signal<string | null>(null);
   protected readonly evaluationSaveError = signal<string | null>(null);
+  protected readonly locationQuestions = signal<SymptomOnsetQuestion[]>([]);
+  protected readonly isSavingLocation = signal(false);
+  protected readonly locationSaveMessage = signal<string | null>(null);
+  protected readonly locationSaveError = signal<string | null>(null);
   protected readonly isSavingAntecedents = signal(false);
   protected readonly antecedentSaveMessage = signal<string | null>(null);
   protected readonly antecedentSaveError = signal<string | null>(null);
@@ -158,6 +164,10 @@ export class App {
     this.isSavingEvaluation.set(false);
     this.evaluationSaveMessage.set(null);
     this.evaluationSaveError.set(null);
+  this.locationQuestions.set([]);
+  this.isSavingLocation.set(false);
+  this.locationSaveMessage.set(null);
+  this.locationSaveError.set(null);
     this.isSavingAntecedents.set(false);
     this.antecedentSaveMessage.set(null);
     this.antecedentSaveError.set(null);
@@ -553,12 +563,64 @@ export class App {
         }
       );
       this.evaluationQuestions.set(merged);
+      const locationQs = (response.locationQuestions ?? response.record.locationQuestions ?? []).map(
+        (q) => ({ ...q, answer: q.answer ?? '' })
+      );
+      if (locationQs.length > 0) {
+        this.locationQuestions.set(locationQs);
+      }
       this.evaluationSaveMessage.set(response.message ?? 'Evaluación guardada.');
     } catch (error) {
       const message = extractErrorMessage(error);
       this.evaluationSaveError.set(message);
     } finally {
       this.isSavingEvaluation.set(false);
+    }
+  }
+
+  protected updateLocationAnswer(id: string, value: string): void {
+    this.locationQuestions.update((current) =>
+      current.map((q) => (q.id === id ? { ...q, answer: value } : q))
+    );
+  }
+
+  protected async saveLocation(): Promise<void> {
+    const questions = this.locationQuestions();
+    const answers = questions.map((q) => ({ id: q.id, answer: q.answer ?? '' }));
+
+    if (answers.length === 0) {
+      this.locationSaveError.set('No hay preguntas para guardar.');
+      this.locationSaveMessage.set(null);
+      return;
+    }
+
+    this.isSavingLocation.set(true);
+    this.locationSaveMessage.set(null);
+    this.locationSaveError.set(null);
+
+    const payload = {
+      ...this.intakeForm.getRawValue(),
+      answers
+    };
+
+    try {
+      const response = await firstValueFrom(
+        this.intakeService.saveLocation(payload)
+      );
+
+      const merged = (response.locationQuestions ?? response.record.locationQuestions ?? []).map(
+        (q) => {
+          const local = this.locationQuestions().find((x) => x.id === q.id);
+          return { ...q, answer: local?.answer ?? q.answer ?? '' };
+        }
+      );
+      this.locationQuestions.set(merged);
+      this.locationSaveMessage.set(response.message ?? 'Localización guardada.');
+    } catch (error) {
+      const message = extractErrorMessage(error);
+      this.locationSaveError.set(message);
+    } finally {
+      this.isSavingLocation.set(false);
     }
   }
 

@@ -8,6 +8,7 @@ import {
   SaveAllergiesResponse,
   SaveAntecedentsResponse,
   SaveDrugsResponse,
+  SaveLocationResponse,
   SaveEvaluationResponse,
   StartResponse,
 } from '../models/intake.models';
@@ -46,5 +47,9 @@ export class IntakeService {
 
   saveEvaluation(payload: unknown): Observable<SaveEvaluationResponse> {
     return this.http.post<SaveEvaluationResponse>(`${API_BASE_URL}/evaluation`, payload);
+  }
+
+  saveLocation(payload: unknown): Observable<SaveLocationResponse> {
+    return this.http.post<SaveLocationResponse>(`${API_BASE_URL}/location`, payload);
   }
 }

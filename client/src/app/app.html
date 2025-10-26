@@ -107,6 +107,17 @@
       />
     }
 
+    @if (locationQuestions().length > 0) {
+      <app-location-section
+        [questions]="locationQuestions()"
+        [isSaving]="isSavingLocation()"
+        [saveMessage]="locationSaveMessage()"
+        [saveError]="locationSaveError()"
+        (answerChange)="updateLocationAnswer($event.id, $event.value)"
+        (saveConfirmed)="saveLocation()"
+      />
+    }
+
     @if (submissionError(); as error) {
       <section class="result result--error">
         <h2>Submission Failed</h2>

@@ -134,7 +134,28 @@ export interface SaveEvaluationResponse {
     suggestedDrugs: string[];
     symptomOnsetQuestions: SymptomOnsetQuestion[];
     evaluationQuestions: SymptomOnsetQuestion[];
+    locationQuestions: SymptomOnsetQuestion[];
     updatedAt: string;
   };
   evaluationQuestions: SymptomOnsetQuestion[];
+  locationQuestions: SymptomOnsetQuestion[];
+}
+
+export interface SaveLocationResponse {
+  message: string;
+  record: {
+    age: number;
+    gender: Gender;
+    chiefComplaint: string;
+    selectedAntecedents: string[];
+    selectedAllergies: string[];
+    selectedDrugs: string[];
+    suggestedAllergies: string[];
+    suggestedDrugs: string[];
+    symptomOnsetQuestions: SymptomOnsetQuestion[];
+    evaluationQuestions: SymptomOnsetQuestion[];
+    locationQuestions: SymptomOnsetQuestion[];
+    updatedAt: string;
+  };
+  locationQuestions: SymptomOnsetQuestion[];
 }
