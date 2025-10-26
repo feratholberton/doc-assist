@@ -200,7 +200,31 @@ export interface SaveAssociatedResponse {
     locationQuestions: SymptomOnsetQuestion[];
     characteristicsQuestions: SymptomOnsetQuestion[];
     associatedSymptomsQuestions: SymptomOnsetQuestion[];
+    precipitatingFactorsQuestions: SymptomOnsetQuestion[];
     updatedAt: string;
   };
   associatedSymptomsQuestions: SymptomOnsetQuestion[];
+  precipitatingFactorsQuestions: SymptomOnsetQuestion[];
+}
+
+export interface SavePrecipitatingResponse {
+  message: string;
+  record: {
+    age: number;
+    gender: Gender;
+    chiefComplaint: string;
+    selectedAntecedents: string[];
+    selectedAllergies: string[];
+    selectedDrugs: string[];
+    suggestedAllergies: string[];
+    suggestedDrugs: string[];
+    symptomOnsetQuestions: SymptomOnsetQuestion[];
+    evaluationQuestions: SymptomOnsetQuestion[];
+    locationQuestions: SymptomOnsetQuestion[];
+    characteristicsQuestions: SymptomOnsetQuestion[];
+    associatedSymptomsQuestions: SymptomOnsetQuestion[];
+    precipitatingFactorsQuestions: SymptomOnsetQuestion[];
+    updatedAt: string;
+  };
+  precipitatingFactorsQuestions: SymptomOnsetQuestion[];
 }

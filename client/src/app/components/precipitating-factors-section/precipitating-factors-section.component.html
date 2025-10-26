@@ -1,0 +1,38 @@
+<section class="precipitating" aria-labelledby="precipitating-heading">
+  <header class="precipitating__header">
+    <h2 id="precipitating-heading">Factores precipitantes y contexto</h2>
+    <p class="precipitating__description">
+      Registre factores o contextos que precipitan o modifican el cuadro.
+    </p>
+  </header>
+
+  <div class="precipitating__list">
+    @for (question of questions; track question.id) {
+      <div class="precipitating__item">
+        <label class="precipitating__label" [for]="question.id">{{ question.prompt }}</label>
+        <textarea
+          class="precipitating__input"
+          rows="2"
+          [id]="question.id"
+          #answerInput
+          [value]="question.answer"
+          (input)="onInputChange(question, answerInput.value)"
+        ></textarea>
+      </div>
+    }
+  </div>
+
+  <div class="precipitating__actions">
+    <button type="button" class="precipitating__save" (click)="onSave()" [disabled]="isSaving">
+      {{ isSaving ? 'Guardando…' : 'Guardar factores y contexto' }}
+    </button>
+
+    @if (saveMessage) {
+      <p class="precipitating__message precipitating__message--success">{{ saveMessage }}</p>
+    }
+
+    @if (saveError) {
+      <p class="precipitating__message precipitating__message--error">{{ saveError }}</p>
+    }
+  </div>
+</section>

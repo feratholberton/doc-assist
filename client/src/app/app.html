@@ -140,6 +140,17 @@
       />
     }
 
+    @if (precipitatingFactorsQuestions().length > 0) {
+      <app-precipitating-factors-section
+        [questions]="precipitatingFactorsQuestions()"
+        [isSaving]="isSavingPrecipitating()"
+        [saveMessage]="precipitatingSaveMessage()"
+        [saveError]="precipitatingSaveError()"
+        (answerChange)="updatePrecipitatingAnswer($event.id, $event.value)"
+        (saveConfirmed)="savePrecipitating()"
+      />
+    }
+
     @if (submissionError(); as error) {
       <section class="result result--error">
         <h2>Submission Failed</h2>

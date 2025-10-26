@@ -8,22 +8,21 @@ import {
   upsertPatientIntake
 } from '../../stores/patient-intake-store.js'
 
-interface SaveAssociatedRequestBody {
+interface SavePrecipitatingRequestBody {
   age: number;
   gender: 'Male' | 'Female';
   chiefComplaint: string;
   answers: Array<{ id: string; answer: string }>;
 }
 
-interface SaveAssociatedResponseBody {
+interface SavePrecipitatingResponseBody {
   message: string;
   record: PatientIntakeRecord;
-  associatedSymptomsQuestions: SymptomOnsetQuestion[];
   precipitatingFactorsQuestions: SymptomOnsetQuestion[];
 }
 
-const associatedRoute: FastifyPluginAsync = async (fastify) => {
-  fastify.post<{ Body: SaveAssociatedRequestBody; Reply: SaveAssociatedResponseBody }>(
+const precipitatingRoute: FastifyPluginAsync = async (fastify) => {
+  fastify.post<{ Body: SavePrecipitatingRequestBody; Reply: SavePrecipitatingResponseBody }>(
     '/',
     {
       schema: {
@@ -51,7 +50,7 @@ const associatedRoute: FastifyPluginAsync = async (fastify) => {
         response: {
           200: {
             type: 'object',
-            required: ['message', 'record', 'associatedSymptomsQuestions', 'precipitatingFactorsQuestions'],
+            required: ['message', 'record', 'precipitatingFactorsQuestions'],
             properties: {
               message: { type: 'string' },
               record: {
@@ -157,18 +156,6 @@ const associatedRoute: FastifyPluginAsync = async (fastify) => {
                   updatedAt: { type: 'string' }
                 }
               },
-              associatedSymptomsQuestions: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  required: ['id', 'prompt', 'answer'],
-                  properties: {
-                    id: { type: 'string' },
-                    prompt: { type: 'string' },
-                    answer: { type: 'string' }
-                  }
-                }
-              },
               precipitatingFactorsQuestions: {
                 type: 'array',
                 items: {
@@ -193,7 +180,7 @@ const associatedRoute: FastifyPluginAsync = async (fastify) => {
       const key = buildPatientKey(age, gender, normalizedChiefComplaint)
       const existing = getPatientIntake(key)
 
-      const baseQuestions: SymptomOnsetQuestion[] = existing?.associatedSymptomsQuestions ?? []
+      const baseQuestions: SymptomOnsetQuestion[] = existing?.precipitatingFactorsQuestions ?? []
       const answersById = new Map(answers.map((a) => [a.id, (a.answer ?? '').trim()]))
       const updatedQuestions = baseQuestions.map((q) => ({
         id: q.id,
@@ -201,33 +188,22 @@ const associatedRoute: FastifyPluginAsync = async (fastify) => {
         answer: answersById.get(q.id) ?? q.answer ?? ''
       }))
 
-      // Define default next section questions (Precipitating factors and context)
-      const defaultPrecipitatingQuestions: SymptomOnsetQuestion[] = [
-        { id: 'factor-precipito', prompt: '¿Hubo algún factor que precipitó los síntomas?', answer: '' },
-        { id: 'actividad-especifica', prompt: '¿Se relaciona con alguna actividad específica?', answer: '' },
-        { id: 'varia-momento-dia', prompt: '¿Varía con el momento del día?', answer: '' },
-        { id: 'varia-comidas', prompt: '¿Varía con las comidas?', answer: '' },
-        { id: 'nota-personalizada-fac', prompt: 'Nota personalizada', answer: '' }
-      ]
-
       const record = upsertPatientIntake({
         age,
         gender,
         chiefComplaint: normalizedChiefComplaint,
-        associatedSymptomsQuestions: updatedQuestions,
-        precipitatingFactorsQuestions: existing?.precipitatingFactorsQuestions?.length ? existing.precipitatingFactorsQuestions : defaultPrecipitatingQuestions
+        precipitatingFactorsQuestions: updatedQuestions
       })
 
-      request.log.debug({ key, updatedQuestions }, 'Saved associated symptoms answers')
+      request.log.debug({ key, updatedQuestions }, 'Saved precipitating factors/context answers')
 
       return {
-        message: 'Síntomas asociados guardados.',
+        message: 'Factores precipitantes y contexto guardados.',
         record,
-        associatedSymptomsQuestions: record.associatedSymptomsQuestions,
         precipitatingFactorsQuestions: record.precipitatingFactorsQuestions
       }
     }
   )
 }
 
-export default associatedRoute
+export default precipitatingRoute

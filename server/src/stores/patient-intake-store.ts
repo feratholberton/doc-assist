@@ -14,6 +14,7 @@ export interface PatientIntakeRecord {
   locationQuestions: SymptomOnsetQuestion[];
   characteristicsQuestions: SymptomOnsetQuestion[];
   associatedSymptomsQuestions: SymptomOnsetQuestion[];
+  precipitatingFactorsQuestions: SymptomOnsetQuestion[];
   updatedAt: string;
 }
 
@@ -62,6 +63,7 @@ export interface PatientIntakeUpdate {
   locationQuestions?: SymptomOnsetQuestion[];
   characteristicsQuestions?: SymptomOnsetQuestion[];
   associatedSymptomsQuestions?: SymptomOnsetQuestion[];
+  precipitatingFactorsQuestions?: SymptomOnsetQuestion[];
 }
 
 export const upsertPatientIntake = (update: PatientIntakeUpdate): PatientIntakeRecord => {
@@ -82,6 +84,7 @@ export const upsertPatientIntake = (update: PatientIntakeUpdate): PatientIntakeR
     locationQuestions: update.locationQuestions ?? existing?.locationQuestions ?? [],
     characteristicsQuestions: update.characteristicsQuestions ?? existing?.characteristicsQuestions ?? [],
     associatedSymptomsQuestions: update.associatedSymptomsQuestions ?? existing?.associatedSymptomsQuestions ?? [],
+    precipitatingFactorsQuestions: update.precipitatingFactorsQuestions ?? existing?.precipitatingFactorsQuestions ?? [],
     updatedAt: new Date().toISOString()
   };
 

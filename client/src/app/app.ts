@@ -11,6 +11,7 @@ import { EvaluationSectionComponent } from './components/evaluation-section/eval
 import { LocationSectionComponent } from './components/location-section/location-section.component';
 import { CharacteristicsSectionComponent } from './components/characteristics-section/characteristics-section.component';
 import { AssociatedSymptomsSectionComponent } from './components/associated-symptoms-section/associated-symptoms-section.component';
+import { PrecipitatingFactorsSectionComponent } from './components/precipitating-factors-section/precipitating-factors-section.component';
 import { API_BASE_URL } from './config';
 import {
   AllergySuggestionResponse,
@@ -39,6 +40,7 @@ import { IntakeService } from './services/intake.service';
     LocationSectionComponent,
     CharacteristicsSectionComponent,
     AssociatedSymptomsSectionComponent
+    ,PrecipitatingFactorsSectionComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -111,6 +113,10 @@ export class App {
   protected readonly isSavingAssociated = signal(false);
   protected readonly associatedSaveMessage = signal<string | null>(null);
   protected readonly associatedSaveError = signal<string | null>(null);
+  protected readonly precipitatingFactorsQuestions = signal<SymptomOnsetQuestion[]>([]);
+  protected readonly isSavingPrecipitating = signal(false);
+  protected readonly precipitatingSaveMessage = signal<string | null>(null);
+  protected readonly precipitatingSaveError = signal<string | null>(null);
   protected readonly isSavingAntecedents = signal(false);
   protected readonly antecedentSaveMessage = signal<string | null>(null);
   protected readonly antecedentSaveError = signal<string | null>(null);
@@ -188,6 +194,10 @@ export class App {
   this.isSavingAssociated.set(false);
   this.associatedSaveMessage.set(null);
   this.associatedSaveError.set(null);
+  this.precipitatingFactorsQuestions.set([]);
+  this.isSavingPrecipitating.set(false);
+  this.precipitatingSaveMessage.set(null);
+  this.precipitatingSaveError.set(null);
     this.isSavingAntecedents.set(false);
     this.antecedentSaveMessage.set(null);
     this.antecedentSaveError.set(null);
@@ -739,12 +749,64 @@ export class App {
         }
       );
       this.associatedSymptomsQuestions.set(merged);
+      const factors = (response.precipitatingFactorsQuestions ?? response.record.precipitatingFactorsQuestions ?? []).map(
+        (q) => ({ ...q, answer: q.answer ?? '' })
+      );
+      if (factors.length > 0) {
+        this.precipitatingFactorsQuestions.set(factors);
+      }
       this.associatedSaveMessage.set(response.message ?? 'Síntomas asociados guardados.');
     } catch (error) {
       const message = extractErrorMessage(error);
       this.associatedSaveError.set(message);
     } finally {
       this.isSavingAssociated.set(false);
+    }
+  }
+
+  protected updatePrecipitatingAnswer(id: string, value: string): void {
+    this.precipitatingFactorsQuestions.update((current) =>
+      current.map((q) => (q.id === id ? { ...q, answer: value } : q))
+    );
+  }
+
+  protected async savePrecipitating(): Promise<void> {
+    const questions = this.precipitatingFactorsQuestions();
+    const answers = questions.map((q) => ({ id: q.id, answer: q.answer ?? '' }));
+
+    if (answers.length === 0) {
+      this.precipitatingSaveError.set('No hay preguntas para guardar.');
+      this.precipitatingSaveMessage.set(null);
+      return;
+    }
+
+    this.isSavingPrecipitating.set(true);
+    this.precipitatingSaveMessage.set(null);
+    this.precipitatingSaveError.set(null);
+
+    const payload = {
+      ...this.intakeForm.getRawValue(),
+      answers
+    };
+
+    try {
+      const response = await firstValueFrom(
+        this.intakeService.savePrecipitating(payload)
+      );
+
+      const merged = (response.precipitatingFactorsQuestions ?? response.record.precipitatingFactorsQuestions ?? []).map(
+        (q) => {
+          const local = this.precipitatingFactorsQuestions().find((x) => x.id === q.id);
+          return { ...q, answer: local?.answer ?? q.answer ?? '' };
+        }
+      );
+      this.precipitatingFactorsQuestions.set(merged);
+      this.precipitatingSaveMessage.set(response.message ?? 'Factores precipitantes y contexto guardados.');
+    } catch (error) {
+      const message = extractErrorMessage(error);
+      this.precipitatingSaveError.set(message);
+    } finally {
+      this.isSavingPrecipitating.set(false);
     }
   }
 
