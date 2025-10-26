@@ -8,6 +8,7 @@ import {
   SaveAllergiesResponse,
   SaveAntecedentsResponse,
   SaveDrugsResponse,
+  SaveEvaluationResponse,
   StartResponse,
 } from '../models/intake.models';
 
@@ -41,5 +42,9 @@ export class IntakeService {
 
   saveSymptomOnset(payload: unknown): Observable<import('../models/intake.models').SaveSymptomOnsetResponse> {
     return this.http.post<import('../models/intake.models').SaveSymptomOnsetResponse>(`${API_BASE_URL}/symptom-onset`, payload);
+  }
+
+  saveEvaluation(payload: unknown): Observable<SaveEvaluationResponse> {
+    return this.http.post<SaveEvaluationResponse>(`${API_BASE_URL}/evaluation`, payload);
   }
 }

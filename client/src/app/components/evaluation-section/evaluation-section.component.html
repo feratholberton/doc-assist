@@ -1,0 +1,38 @@
+<section class="evaluation" aria-labelledby="evaluation-heading">
+  <header class="evaluation__header">
+    <h2 id="evaluation-heading">Evolución y patrón temporal</h2>
+    <p class="evaluation__description">
+      Registra cómo evolucionó el cuadro desde su inicio y su patrón temporal.
+    </p>
+  </header>
+
+  <div class="evaluation__list">
+    @for (question of questions; track question.id) {
+      <div class="evaluation__item">
+        <label class="evaluation__label" [for]="question.id">{{ question.prompt }}</label>
+        <textarea
+          class="evaluation__input"
+          rows="2"
+          [id]="question.id"
+          #answerInput
+          [value]="question.answer"
+          (input)="onInputChange(question, answerInput.value)"
+        ></textarea>
+      </div>
+    }
+  </div>
+
+  <div class="evaluation__actions">
+    <button type="button" class="evaluation__save" (click)="onSave()" [disabled]="isSaving">
+      {{ isSaving ? 'Guardando…' : 'Guardar evaluación y patrón temporal' }}
+    </button>
+
+    @if (saveMessage) {
+      <p class="evaluation__message evaluation__message--success">{{ saveMessage }}</p>
+    }
+
+    @if (saveError) {
+      <p class="evaluation__message evaluation__message--error">{{ saveError }}</p>
+    }
+  </div>
+</section>

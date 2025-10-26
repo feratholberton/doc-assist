@@ -8,38 +8,21 @@ import {
   upsertPatientIntake
 } from '../../stores/patient-intake-store.js'
 
-interface SaveSymptomOnsetRequestBody {
+interface SaveEvaluationRequestBody {
   age: number;
   gender: 'Male' | 'Female';
   chiefComplaint: string;
   answers: Array<{ id: string; answer: string }>;
 }
 
-interface SaveSymptomOnsetResponseBody {
+interface SaveEvaluationResponseBody {
   message: string;
   record: PatientIntakeRecord;
-  symptomOnsetQuestions: SymptomOnsetQuestion[];
   evaluationQuestions: SymptomOnsetQuestion[];
 }
 
-const defaultSymptomOnsetQuestions: SymptomOnsetQuestion[] = [
-  { id: 'cuando-comenzo', prompt: '¿Cuándo comenzó el problema?', answer: '' },
-  { id: 'como-inicio', prompt: '¿Cómo fue el inicio?', answer: '' },
-  { id: 'hace-cuanto', prompt: '¿Hace cuánto tiempo presenta los síntomas?', answer: '' },
-  { id: 'evento-desencadenante', prompt: '¿Hubo algún evento desencadenante?', answer: '' },
-  { id: 'nota-personalizada', prompt: 'Nota personalizada', answer: '' }
-]
-
-const defaultEvaluationQuestions: SymptomOnsetQuestion[] = [
-  { id: 'como-evoluciono', prompt: '¿Cómo ha evolucionado desde que comenzó?', answer: '' },
-  { id: 'continuo-remision', prompt: '¿Es continuo o tiene períodos de remisión?', answer: '' },
-  { id: 'patron-horario', prompt: '¿Hay un patrón horario?', answer: '' },
-  { id: 'tratamiento-efecto', prompt: '¿Ha recibido algún tratamiento? ¿Mejoró, empeoró o no hubo cambios?', answer: '' },
-  { id: 'nota-personalizada-ev', prompt: 'Nota personalizada', answer: '' }
-]
-
-const symptomOnsetRoute: FastifyPluginAsync = async (fastify) => {
-  fastify.post<{ Body: SaveSymptomOnsetRequestBody; Reply: SaveSymptomOnsetResponseBody }>(
+const evaluationRoute: FastifyPluginAsync = async (fastify) => {
+  fastify.post<{ Body: SaveEvaluationRequestBody; Reply: SaveEvaluationResponseBody }>(
     '/',
     {
       schema: {
@@ -67,7 +50,7 @@ const symptomOnsetRoute: FastifyPluginAsync = async (fastify) => {
         response: {
           200: {
             type: 'object',
-            required: ['message', 'record', 'symptomOnsetQuestions', 'evaluationQuestions'],
+            required: ['message', 'record', 'evaluationQuestions'],
             properties: {
               message: { type: 'string' },
               record: {
@@ -121,18 +104,6 @@ const symptomOnsetRoute: FastifyPluginAsync = async (fastify) => {
                   updatedAt: { type: 'string' }
                 }
               },
-              symptomOnsetQuestions: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  required: ['id', 'prompt', 'answer'],
-                  properties: {
-                    id: { type: 'string' },
-                    prompt: { type: 'string' },
-                    answer: { type: 'string' }
-                  }
-                }
-              },
               evaluationQuestions: {
                 type: 'array',
                 items: {
@@ -157,11 +128,7 @@ const symptomOnsetRoute: FastifyPluginAsync = async (fastify) => {
       const key = buildPatientKey(age, gender, normalizedChiefComplaint)
       const existing = getPatientIntake(key)
 
-      const baseQuestions: SymptomOnsetQuestion[] =
-        existing?.symptomOnsetQuestions?.length
-          ? existing.symptomOnsetQuestions
-          : defaultSymptomOnsetQuestions
-
+      const baseQuestions: SymptomOnsetQuestion[] = existing?.evaluationQuestions ?? []
       const answersById = new Map(answers.map((a) => [a.id, (a.answer ?? '').trim()]))
       const updatedQuestions = baseQuestions.map((q) => ({
         id: q.id,
@@ -173,20 +140,18 @@ const symptomOnsetRoute: FastifyPluginAsync = async (fastify) => {
         age,
         gender,
         chiefComplaint: normalizedChiefComplaint,
-        symptomOnsetQuestions: updatedQuestions,
-        evaluationQuestions: existing?.evaluationQuestions?.length ? existing.evaluationQuestions : defaultEvaluationQuestions
+        evaluationQuestions: updatedQuestions
       })
 
-      request.log.debug({ key, updatedQuestions }, 'Saved symptom onset answers')
+      request.log.debug({ key, updatedQuestions }, 'Saved evaluation/time course answers')
 
       return {
-        message: 'Inicio de síntomas guardado.',
+        message: 'Evaluación y patrón temporal guardados.',
         record,
-        symptomOnsetQuestions: record.symptomOnsetQuestions,
         evaluationQuestions: record.evaluationQuestions
       }
     }
   )
 }
 
-export default symptomOnsetRoute
+export default evaluationRoute

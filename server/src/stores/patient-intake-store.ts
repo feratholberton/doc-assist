@@ -10,6 +10,7 @@ export interface PatientIntakeRecord {
   suggestedDrugs: string[];
   selectedDrugs: string[];
   symptomOnsetQuestions: SymptomOnsetQuestion[];
+  evaluationQuestions: SymptomOnsetQuestion[];
   updatedAt: string;
 }
 
@@ -54,6 +55,7 @@ export interface PatientIntakeUpdate {
   suggestedDrugs?: string[];
   selectedDrugs?: string[];
   symptomOnsetQuestions?: SymptomOnsetQuestion[];
+  evaluationQuestions?: SymptomOnsetQuestion[];
 }
 
 export const upsertPatientIntake = (update: PatientIntakeUpdate): PatientIntakeRecord => {
@@ -70,6 +72,7 @@ export const upsertPatientIntake = (update: PatientIntakeUpdate): PatientIntakeR
     suggestedDrugs: update.suggestedDrugs ?? existing?.suggestedDrugs ?? [],
     selectedDrugs: update.selectedDrugs ?? existing?.selectedDrugs ?? [],
     symptomOnsetQuestions: update.symptomOnsetQuestions ?? existing?.symptomOnsetQuestions ?? [],
+    evaluationQuestions: update.evaluationQuestions ?? existing?.evaluationQuestions ?? [],
     updatedAt: new Date().toISOString()
   };
 

@@ -114,7 +114,27 @@ export interface SaveSymptomOnsetResponse {
     suggestedAllergies: string[];
     suggestedDrugs: string[];
     symptomOnsetQuestions: SymptomOnsetQuestion[];
+    evaluationQuestions: SymptomOnsetQuestion[];
     updatedAt: string;
   };
   symptomOnsetQuestions: SymptomOnsetQuestion[];
+  evaluationQuestions: SymptomOnsetQuestion[];
+}
+
+export interface SaveEvaluationResponse {
+  message: string;
+  record: {
+    age: number;
+    gender: Gender;
+    chiefComplaint: string;
+    selectedAntecedents: string[];
+    selectedAllergies: string[];
+    selectedDrugs: string[];
+    suggestedAllergies: string[];
+    suggestedDrugs: string[];
+    symptomOnsetQuestions: SymptomOnsetQuestion[];
+    evaluationQuestions: SymptomOnsetQuestion[];
+    updatedAt: string;
+  };
+  evaluationQuestions: SymptomOnsetQuestion[];
 }

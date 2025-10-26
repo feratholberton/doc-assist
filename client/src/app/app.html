@@ -96,6 +96,17 @@
       />
     }
 
+    @if (evaluationQuestions().length > 0) {
+      <app-evaluation-section
+        [questions]="evaluationQuestions()"
+        [isSaving]="isSavingEvaluation()"
+        [saveMessage]="evaluationSaveMessage()"
+        [saveError]="evaluationSaveError()"
+        (answerChange)="updateEvaluationAnswer($event.id, $event.value)"
+        (saveConfirmed)="saveEvaluation()"
+      />
+    }
+
     @if (submissionError(); as error) {
       <section class="result result--error">
         <h2>Submission Failed</h2>
