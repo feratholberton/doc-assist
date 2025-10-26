@@ -12,6 +12,7 @@ import { LocationSectionComponent } from './components/location-section/location
 import { CharacteristicsSectionComponent } from './components/characteristics-section/characteristics-section.component';
 import { AssociatedSymptomsSectionComponent } from './components/associated-symptoms-section/associated-symptoms-section.component';
 import { PrecipitatingFactorsSectionComponent } from './components/precipitating-factors-section/precipitating-factors-section.component';
+import { RecentExposuresSectionComponent } from './components/recent-exposures-section/recent-exposures-section.component';
 import { API_BASE_URL } from './config';
 import {
   AllergySuggestionResponse,
@@ -41,6 +42,7 @@ import { IntakeService } from './services/intake.service';
     CharacteristicsSectionComponent,
     AssociatedSymptomsSectionComponent
     ,PrecipitatingFactorsSectionComponent
+    ,RecentExposuresSectionComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -117,6 +119,10 @@ export class App {
   protected readonly isSavingPrecipitating = signal(false);
   protected readonly precipitatingSaveMessage = signal<string | null>(null);
   protected readonly precipitatingSaveError = signal<string | null>(null);
+  protected readonly recentExposuresQuestions = signal<SymptomOnsetQuestion[]>([]);
+  protected readonly isSavingRecentExposures = signal(false);
+  protected readonly recentExposuresSaveMessage = signal<string | null>(null);
+  protected readonly recentExposuresSaveError = signal<string | null>(null);
   protected readonly isSavingAntecedents = signal(false);
   protected readonly antecedentSaveMessage = signal<string | null>(null);
   protected readonly antecedentSaveError = signal<string | null>(null);
@@ -198,6 +204,10 @@ export class App {
   this.isSavingPrecipitating.set(false);
   this.precipitatingSaveMessage.set(null);
   this.precipitatingSaveError.set(null);
+  this.recentExposuresQuestions.set([]);
+  this.isSavingRecentExposures.set(false);
+  this.recentExposuresSaveMessage.set(null);
+  this.recentExposuresSaveError.set(null);
     this.isSavingAntecedents.set(false);
     this.antecedentSaveMessage.set(null);
     this.antecedentSaveError.set(null);
@@ -802,11 +812,63 @@ export class App {
       );
       this.precipitatingFactorsQuestions.set(merged);
       this.precipitatingSaveMessage.set(response.message ?? 'Factores precipitantes y contexto guardados.');
+      const recent = (response.recentExposuresQuestions ?? response.record.recentExposuresQuestions ?? []).map(
+        (q) => ({ ...q, answer: q.answer ?? '' })
+      );
+      if (recent.length > 0) {
+        this.recentExposuresQuestions.set(recent);
+      }
     } catch (error) {
       const message = extractErrorMessage(error);
       this.precipitatingSaveError.set(message);
     } finally {
       this.isSavingPrecipitating.set(false);
+    }
+  }
+
+  protected updateRecentExposuresAnswer(id: string, value: string): void {
+    this.recentExposuresQuestions.update((current) =>
+      current.map((q) => (q.id === id ? { ...q, answer: value } : q))
+    );
+  }
+
+  protected async saveRecentExposures(): Promise<void> {
+    const questions = this.recentExposuresQuestions();
+    const answers = questions.map((q) => ({ id: q.id, answer: q.answer ?? '' }));
+
+    if (answers.length === 0) {
+      this.recentExposuresSaveError.set('No hay preguntas para guardar.');
+      this.recentExposuresSaveMessage.set(null);
+      return;
+    }
+
+    this.isSavingRecentExposures.set(true);
+    this.recentExposuresSaveMessage.set(null);
+    this.recentExposuresSaveError.set(null);
+
+    const payload = {
+      ...this.intakeForm.getRawValue(),
+      answers
+    };
+
+    try {
+      const response = await firstValueFrom(
+        this.intakeService.saveRecentExposures(payload)
+      );
+
+      const merged = (response.recentExposuresQuestions ?? response.record.recentExposuresQuestions ?? []).map(
+        (q) => {
+          const local = this.recentExposuresQuestions().find((x) => x.id === q.id);
+          return { ...q, answer: local?.answer ?? q.answer ?? '' };
+        }
+      );
+      this.recentExposuresQuestions.set(merged);
+      this.recentExposuresSaveMessage.set(response.message ?? 'Antecedentes recientes y contactos guardados.');
+    } catch (error) {
+      const message = extractErrorMessage(error);
+      this.recentExposuresSaveError.set(message);
+    } finally {
+      this.isSavingRecentExposures.set(false);
     }
   }
 
@@ -1088,6 +1150,18 @@ export class App {
       this.evaluationQuestions.set([]);
       this.locationQuestions.set([]);
       this.characteristicsQuestions.set([]);
+      this.associatedSymptomsQuestions.set([]);
+      this.isSavingAssociated.set(false);
+      this.associatedSaveMessage.set(null);
+      this.associatedSaveError.set(null);
+      this.precipitatingFactorsQuestions.set([]);
+      this.isSavingPrecipitating.set(false);
+      this.precipitatingSaveMessage.set(null);
+      this.precipitatingSaveError.set(null);
+      this.recentExposuresQuestions.set([]);
+      this.isSavingRecentExposures.set(false);
+      this.recentExposuresSaveMessage.set(null);
+      this.recentExposuresSaveError.set(null);
     }
 
     const basePayload = this.intakeForm.getRawValue();

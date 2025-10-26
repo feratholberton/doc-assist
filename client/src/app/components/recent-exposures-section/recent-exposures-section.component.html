@@ -1,0 +1,38 @@
+<section class="recent-exposures" aria-labelledby="recent-exposures-heading">
+  <header class="recent-exposures__header">
+    <h2 id="recent-exposures-heading">Antecedentes recientes y contactos</h2>
+    <p class="recent-exposures__description">
+      Registre exposiciones recientes, contactos y contextos relevantes.
+    </p>
+  </header>
+
+  <div class="recent-exposures__list">
+    @for (question of questions; track question.id) {
+      <div class="recent-exposures__item">
+        <label class="recent-exposures__label" [for]="question.id">{{ question.prompt }}</label>
+        <textarea
+          class="recent-exposures__input"
+          rows="2"
+          [id]="question.id"
+          #answerInput
+          [value]="question.answer"
+          (input)="onInputChange(question, answerInput.value)"
+        ></textarea>
+      </div>
+    }
+  </div>
+
+  <div class="recent-exposures__actions">
+    <button type="button" class="recent-exposures__save" (click)="onSave()" [disabled]="isSaving">
+      {{ isSaving ? 'Guardando…' : 'Guardar antecedentes recientes y contactos' }}
+    </button>
+
+    @if (saveMessage) {
+      <p class="recent-exposures__message recent-exposures__message--success">{{ saveMessage }}</p>
+    }
+
+    @if (saveError) {
+      <p class="recent-exposures__message recent-exposures__message--error">{{ saveError }}</p>
+    }
+  </div>
+</section>

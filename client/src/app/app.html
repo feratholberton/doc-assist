@@ -151,6 +151,17 @@
       />
     }
 
+    @if (recentExposuresQuestions().length > 0) {
+      <app-recent-exposures-section
+        [questions]="recentExposuresQuestions()"
+        [isSaving]="isSavingRecentExposures()"
+        [saveMessage]="recentExposuresSaveMessage()"
+        [saveError]="recentExposuresSaveError()"
+        (answerChange)="updateRecentExposuresAnswer($event.id, $event.value)"
+        (saveConfirmed)="saveRecentExposures()"
+      />
+    }
+
     @if (submissionError(); as error) {
       <section class="result result--error">
         <h2>Submission Failed</h2>

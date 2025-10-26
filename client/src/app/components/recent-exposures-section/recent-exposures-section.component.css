@@ -1,0 +1,91 @@
+.recent-exposures {
+  margin-top: 2.5rem;
+  padding: 1.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(14, 165, 233, 0.35);
+  background-color: rgba(186, 230, 253, 0.25);
+  color: #0f172a;
+}
+
+.recent-exposures__header {
+  margin-bottom: 1.25rem;
+}
+
+.recent-exposures__header h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.4rem;
+}
+
+.recent-exposures__description {
+  margin: 0;
+  color: #0ea5e9;
+  font-size: 0.95rem;
+}
+
+.recent-exposures__list {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.recent-exposures__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.recent-exposures__label {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.recent-exposures__input {
+  width: 100%;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid rgba(14, 165, 233, 0.35);
+  border-radius: 8px;
+  font-size: 1rem;
+  resize: vertical;
+  min-height: 72px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.recent-exposures__input:focus {
+  outline: none;
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+}
+
+.recent-exposures__actions {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.recent-exposures__save {
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background-color: #0ea5e9;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.recent-exposures__save[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.recent-exposures__message {
+  margin: 0.25rem 0 0;
+  font-size: 0.95rem;
+}
+
+.recent-exposures__message--success {
+  color: #065f46;
+}
+
+.recent-exposures__message--error {
+  color: #b91c1c;
+}

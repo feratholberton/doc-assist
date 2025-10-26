@@ -224,7 +224,32 @@ export interface SavePrecipitatingResponse {
     characteristicsQuestions: SymptomOnsetQuestion[];
     associatedSymptomsQuestions: SymptomOnsetQuestion[];
     precipitatingFactorsQuestions: SymptomOnsetQuestion[];
+    recentExposuresQuestions: SymptomOnsetQuestion[];
     updatedAt: string;
   };
   precipitatingFactorsQuestions: SymptomOnsetQuestion[];
+  recentExposuresQuestions: SymptomOnsetQuestion[];
+}
+
+export interface SaveRecentExposuresResponse {
+  message: string;
+  record: {
+    age: number;
+    gender: Gender;
+    chiefComplaint: string;
+    selectedAntecedents: string[];
+    selectedAllergies: string[];
+    selectedDrugs: string[];
+    suggestedAllergies: string[];
+    suggestedDrugs: string[];
+    symptomOnsetQuestions: SymptomOnsetQuestion[];
+    evaluationQuestions: SymptomOnsetQuestion[];
+    locationQuestions: SymptomOnsetQuestion[];
+    characteristicsQuestions: SymptomOnsetQuestion[];
+    associatedSymptomsQuestions: SymptomOnsetQuestion[];
+    precipitatingFactorsQuestions: SymptomOnsetQuestion[];
+    recentExposuresQuestions: SymptomOnsetQuestion[];
+    updatedAt: string;
+  };
+  recentExposuresQuestions: SymptomOnsetQuestion[];
 }

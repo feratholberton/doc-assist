@@ -13,6 +13,7 @@ import {
   SaveCharacteristicsResponse,
   SaveAssociatedResponse,
   SavePrecipitatingResponse,
+  SaveRecentExposuresResponse,
   StartResponse,
 } from '../models/intake.models';
 
@@ -66,5 +67,9 @@ export class IntakeService {
 
   savePrecipitating(payload: unknown): Observable<SavePrecipitatingResponse> {
     return this.http.post<SavePrecipitatingResponse>(`${API_BASE_URL}/precipitating`, payload);
+  }
+
+  saveRecentExposures(payload: unknown): Observable<SaveRecentExposuresResponse> {
+    return this.http.post<SaveRecentExposuresResponse>(`${API_BASE_URL}/recent-exposures`, payload);
   }
 }

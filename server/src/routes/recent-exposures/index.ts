@@ -8,22 +8,21 @@ import {
   upsertPatientIntake
 } from '../../stores/patient-intake-store.js'
 
-interface SavePrecipitatingRequestBody {
+interface SaveRecentExposuresRequestBody {
   age: number;
   gender: 'Male' | 'Female';
   chiefComplaint: string;
   answers: Array<{ id: string; answer: string }>;
 }
 
-interface SavePrecipitatingResponseBody {
+interface SaveRecentExposuresResponseBody {
   message: string;
   record: PatientIntakeRecord;
-  precipitatingFactorsQuestions: SymptomOnsetQuestion[];
   recentExposuresQuestions: SymptomOnsetQuestion[];
 }
 
-const precipitatingRoute: FastifyPluginAsync = async (fastify) => {
-  fastify.post<{ Body: SavePrecipitatingRequestBody; Reply: SavePrecipitatingResponseBody }>(
+const recentExposuresRoute: FastifyPluginAsync = async (fastify) => {
+  fastify.post<{ Body: SaveRecentExposuresRequestBody; Reply: SaveRecentExposuresResponseBody }>(
     '/',
     {
       schema: {
@@ -51,7 +50,7 @@ const precipitatingRoute: FastifyPluginAsync = async (fastify) => {
         response: {
           200: {
             type: 'object',
-            required: ['message', 'record', 'precipitatingFactorsQuestions', 'recentExposuresQuestions'],
+            required: ['message', 'record', 'recentExposuresQuestions'],
             properties: {
               message: { type: 'string' },
               record: {
@@ -170,18 +169,6 @@ const precipitatingRoute: FastifyPluginAsync = async (fastify) => {
                   updatedAt: { type: 'string' }
                 }
               },
-              precipitatingFactorsQuestions: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  required: ['id', 'prompt', 'answer'],
-                  properties: {
-                    id: { type: 'string' },
-                    prompt: { type: 'string' },
-                    answer: { type: 'string' }
-                  }
-                }
-              },
               recentExposuresQuestions: {
                 type: 'array',
                 items: {
@@ -206,7 +193,7 @@ const precipitatingRoute: FastifyPluginAsync = async (fastify) => {
       const key = buildPatientKey(age, gender, normalizedChiefComplaint)
       const existing = getPatientIntake(key)
 
-      const baseQuestions: SymptomOnsetQuestion[] = existing?.precipitatingFactorsQuestions ?? []
+      const baseQuestions: SymptomOnsetQuestion[] = existing?.recentExposuresQuestions ?? []
       const answersById = new Map(answers.map((a) => [a.id, (a.answer ?? '').trim()]))
       const updatedQuestions = baseQuestions.map((q) => ({
         id: q.id,
@@ -214,35 +201,22 @@ const precipitatingRoute: FastifyPluginAsync = async (fastify) => {
         answer: answersById.get(q.id) ?? q.answer ?? ''
       }))
 
-      // Define default next section questions (Recent exposures and contacts)
-      const defaultRecentExposuresQuestions: SymptomOnsetQuestion[] = [
-        { id: 'similares-cercanos', prompt: '¿Alguien cercano presentó síntomas similares?', answer: '' },
-        { id: 'cuadros-parecidos-antes', prompt: '¿Ha tenido cuadros parecidos antes?', answer: '' },
-        { id: 'infecciones-recientes', prompt: '¿Tuvo infecciones recientes?', answer: '' },
-        { id: 'viajo-recientemente', prompt: '¿Ha viajado recientemente? ¿A dónde?', answer: '' },
-        { id: 'exposicion-mosquitos', prompt: '¿Exposición a mosquitos?', answer: '' },
-        { id: 'contacto-animales', prompt: '¿Contacto con animales?', answer: '' },
-        { id: 'nota-personalizada-rec', prompt: 'Nota personalizada', answer: '' }
-      ]
-
       const record = upsertPatientIntake({
         age,
         gender,
         chiefComplaint: normalizedChiefComplaint,
-        precipitatingFactorsQuestions: updatedQuestions,
-        recentExposuresQuestions: existing?.recentExposuresQuestions?.length ? existing.recentExposuresQuestions : defaultRecentExposuresQuestions
+        recentExposuresQuestions: updatedQuestions
       })
 
-      request.log.debug({ key, updatedQuestions }, 'Saved precipitating factors/context answers')
+      request.log.debug({ key, updatedQuestions }, 'Saved recent exposures and contacts answers')
 
       return {
-        message: 'Factores precipitantes y contexto guardados.',
+        message: 'Antecedentes recientes y contactos guardados.',
         record,
-        precipitatingFactorsQuestions: record.precipitatingFactorsQuestions,
         recentExposuresQuestions: record.recentExposuresQuestions
       }
     }
   )
 }
 
-export default precipitatingRoute
+export default recentExposuresRoute
