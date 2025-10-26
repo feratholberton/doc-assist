@@ -8,22 +8,21 @@ import {
   upsertPatientIntake
 } from '../../stores/patient-intake-store.js'
 
-interface SaveCharacteristicsRequestBody {
+interface SaveAssociatedRequestBody {
   age: number;
   gender: 'Male' | 'Female';
   chiefComplaint: string;
   answers: Array<{ id: string; answer: string }>;
 }
 
-interface SaveCharacteristicsResponseBody {
+interface SaveAssociatedResponseBody {
   message: string;
   record: PatientIntakeRecord;
-  characteristicsQuestions: SymptomOnsetQuestion[];
   associatedSymptomsQuestions: SymptomOnsetQuestion[];
 }
 
-const characteristicsRoute: FastifyPluginAsync = async (fastify) => {
-  fastify.post<{ Body: SaveCharacteristicsRequestBody; Reply: SaveCharacteristicsResponseBody }>(
+const associatedRoute: FastifyPluginAsync = async (fastify) => {
+  fastify.post<{ Body: SaveAssociatedRequestBody; Reply: SaveAssociatedResponseBody }>(
     '/',
     {
       schema: {
@@ -51,7 +50,7 @@ const characteristicsRoute: FastifyPluginAsync = async (fastify) => {
         response: {
           200: {
             type: 'object',
-            required: ['message', 'record', 'characteristicsQuestions', 'associatedSymptomsQuestions'],
+            required: ['message', 'record', 'associatedSymptomsQuestions'],
             properties: {
               message: { type: 'string' },
               record: {
@@ -144,18 +143,6 @@ const characteristicsRoute: FastifyPluginAsync = async (fastify) => {
                   updatedAt: { type: 'string' }
                 }
               },
-              characteristicsQuestions: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  required: ['id', 'prompt', 'answer'],
-                  properties: {
-                    id: { type: 'string' },
-                    prompt: { type: 'string' },
-                    answer: { type: 'string' }
-                  }
-                }
-              },
               associatedSymptomsQuestions: {
                 type: 'array',
                 items: {
@@ -180,7 +167,7 @@ const characteristicsRoute: FastifyPluginAsync = async (fastify) => {
       const key = buildPatientKey(age, gender, normalizedChiefComplaint)
       const existing = getPatientIntake(key)
 
-      const baseQuestions: SymptomOnsetQuestion[] = existing?.characteristicsQuestions ?? []
+      const baseQuestions: SymptomOnsetQuestion[] = existing?.associatedSymptomsQuestions ?? []
       const answersById = new Map(answers.map((a) => [a.id, (a.answer ?? '').trim()]))
       const updatedQuestions = baseQuestions.map((q) => ({
         id: q.id,
@@ -188,35 +175,22 @@ const characteristicsRoute: FastifyPluginAsync = async (fastify) => {
         answer: answersById.get(q.id) ?? q.answer ?? ''
       }))
 
-      // Define default next section questions (Associated symptoms categories)
-      const defaultAssociatedQuestions: SymptomOnsetQuestion[] = [
-        { id: 'generales', prompt: 'Generales', answer: '' },
-        { id: 'cardiovascular', prompt: 'Cardiovascular', answer: '' },
-        { id: 'respiratorio', prompt: 'Respiratorio', answer: '' },
-        { id: 'digestivo', prompt: 'Digestivo', answer: '' },
-        { id: 'urinario', prompt: 'Urinario', answer: '' },
-        { id: 'neurologico', prompt: 'Neurológico', answer: '' },
-        { id: 'nota-personalizada-asoc', prompt: 'Nota personalizada', answer: '' }
-      ]
-
       const record = upsertPatientIntake({
         age,
         gender,
         chiefComplaint: normalizedChiefComplaint,
-        characteristicsQuestions: updatedQuestions,
-        associatedSymptomsQuestions: existing?.associatedSymptomsQuestions?.length ? existing.associatedSymptomsQuestions : defaultAssociatedQuestions
+        associatedSymptomsQuestions: updatedQuestions
       })
 
-      request.log.debug({ key, updatedQuestions }, 'Saved symptom characteristics answers')
+      request.log.debug({ key, updatedQuestions }, 'Saved associated symptoms answers')
 
       return {
-        message: 'Características del síntoma guardadas.',
+        message: 'Síntomas asociados guardados.',
         record,
-        characteristicsQuestions: record.characteristicsQuestions,
         associatedSymptomsQuestions: record.associatedSymptomsQuestions
       }
     }
   )
 }
 
-export default characteristicsRoute
+export default associatedRoute

@@ -1,0 +1,38 @@
+<section class="associated" aria-labelledby="associated-heading">
+  <header class="associated__header">
+    <h2 id="associated-heading">Síntomas asociados</h2>
+    <p class="associated__description">
+      Registre los síntomas asociados por sistema.
+    </p>
+  </header>
+
+  <div class="associated__list">
+    @for (question of questions; track question.id) {
+      <div class="associated__item">
+        <label class="associated__label" [for]="question.id">{{ question.prompt }}</label>
+        <textarea
+          class="associated__input"
+          rows="2"
+          [id]="question.id"
+          #answerInput
+          [value]="question.answer"
+          (input)="onInputChange(question, answerInput.value)"
+        ></textarea>
+      </div>
+    }
+  </div>
+
+  <div class="associated__actions">
+    <button type="button" class="associated__save" (click)="onSave()" [disabled]="isSaving">
+      {{ isSaving ? 'Guardando…' : 'Guardar síntomas asociados' }}
+    </button>
+
+    @if (saveMessage) {
+      <p class="associated__message associated__message--success">{{ saveMessage }}</p>
+    }
+
+    @if (saveError) {
+      <p class="associated__message associated__message--error">{{ saveError }}</p>
+    }
+  </div>
+</section>

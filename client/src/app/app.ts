@@ -10,6 +10,7 @@ import { SymptomOnsetSectionComponent } from './components/symptom-onset-section
 import { EvaluationSectionComponent } from './components/evaluation-section/evaluation-section.component';
 import { LocationSectionComponent } from './components/location-section/location-section.component';
 import { CharacteristicsSectionComponent } from './components/characteristics-section/characteristics-section.component';
+import { AssociatedSymptomsSectionComponent } from './components/associated-symptoms-section/associated-symptoms-section.component';
 import { API_BASE_URL } from './config';
 import {
   AllergySuggestionResponse,
@@ -36,7 +37,8 @@ import { IntakeService } from './services/intake.service';
     SymptomOnsetSectionComponent,
     EvaluationSectionComponent,
     LocationSectionComponent,
-    CharacteristicsSectionComponent
+    CharacteristicsSectionComponent,
+    AssociatedSymptomsSectionComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -105,6 +107,10 @@ export class App {
   protected readonly isSavingCharacteristics = signal(false);
   protected readonly characteristicsSaveMessage = signal<string | null>(null);
   protected readonly characteristicsSaveError = signal<string | null>(null);
+  protected readonly associatedSymptomsQuestions = signal<SymptomOnsetQuestion[]>([]);
+  protected readonly isSavingAssociated = signal(false);
+  protected readonly associatedSaveMessage = signal<string | null>(null);
+  protected readonly associatedSaveError = signal<string | null>(null);
   protected readonly isSavingAntecedents = signal(false);
   protected readonly antecedentSaveMessage = signal<string | null>(null);
   protected readonly antecedentSaveError = signal<string | null>(null);
@@ -178,6 +184,10 @@ export class App {
   this.isSavingCharacteristics.set(false);
   this.characteristicsSaveMessage.set(null);
   this.characteristicsSaveError.set(null);
+  this.associatedSymptomsQuestions.set([]);
+  this.isSavingAssociated.set(false);
+  this.associatedSaveMessage.set(null);
+  this.associatedSaveError.set(null);
     this.isSavingAntecedents.set(false);
     this.antecedentSaveMessage.set(null);
     this.antecedentSaveError.set(null);
@@ -677,12 +687,64 @@ export class App {
         }
       );
       this.characteristicsQuestions.set(merged);
+      const assoc = (response.associatedSymptomsQuestions ?? response.record.associatedSymptomsQuestions ?? []).map(
+        (q) => ({ ...q, answer: q.answer ?? '' })
+      );
+      if (assoc.length > 0) {
+        this.associatedSymptomsQuestions.set(assoc);
+      }
       this.characteristicsSaveMessage.set(response.message ?? 'Características del síntoma guardadas.');
     } catch (error) {
       const message = extractErrorMessage(error);
       this.characteristicsSaveError.set(message);
     } finally {
       this.isSavingCharacteristics.set(false);
+    }
+  }
+
+  protected updateAssociatedAnswer(id: string, value: string): void {
+    this.associatedSymptomsQuestions.update((current) =>
+      current.map((q) => (q.id === id ? { ...q, answer: value } : q))
+    );
+  }
+
+  protected async saveAssociated(): Promise<void> {
+    const questions = this.associatedSymptomsQuestions();
+    const answers = questions.map((q) => ({ id: q.id, answer: q.answer ?? '' }));
+
+    if (answers.length === 0) {
+      this.associatedSaveError.set('No hay preguntas para guardar.');
+      this.associatedSaveMessage.set(null);
+      return;
+    }
+
+    this.isSavingAssociated.set(true);
+    this.associatedSaveMessage.set(null);
+    this.associatedSaveError.set(null);
+
+    const payload = {
+      ...this.intakeForm.getRawValue(),
+      answers
+    };
+
+    try {
+      const response = await firstValueFrom(
+        this.intakeService.saveAssociated(payload)
+      );
+
+      const merged = (response.associatedSymptomsQuestions ?? response.record.associatedSymptomsQuestions ?? []).map(
+        (q) => {
+          const local = this.associatedSymptomsQuestions().find((x) => x.id === q.id);
+          return { ...q, answer: local?.answer ?? q.answer ?? '' };
+        }
+      );
+      this.associatedSymptomsQuestions.set(merged);
+      this.associatedSaveMessage.set(response.message ?? 'Síntomas asociados guardados.');
+    } catch (error) {
+      const message = extractErrorMessage(error);
+      this.associatedSaveError.set(message);
+    } finally {
+      this.isSavingAssociated.set(false);
     }
   }
 

@@ -129,6 +129,17 @@
       />
     }
 
+    @if (associatedSymptomsQuestions().length > 0) {
+      <app-associated-symptoms-section
+        [questions]="associatedSymptomsQuestions()"
+        [isSaving]="isSavingAssociated()"
+        [saveMessage]="associatedSaveMessage()"
+        [saveError]="associatedSaveError()"
+        (answerChange)="updateAssociatedAnswer($event.id, $event.value)"
+        (saveConfirmed)="saveAssociated()"
+      />
+    }
+
     @if (submissionError(); as error) {
       <section class="result result--error">
         <h2>Submission Failed</h2>
