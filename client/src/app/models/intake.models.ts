@@ -53,6 +53,7 @@ export interface SaveAllergiesResponse {
     selectedAllergies: string[];
     suggestedDrugs: string[];
     selectedDrugs: string[];
+    symptomOnsetQuestions: SymptomOnsetQuestion[];
     updatedAt: string;
   };
   suggestedDrugs: string[];
@@ -72,8 +73,16 @@ export interface DrugSuggestionResponse {
     selectedDrugs: string[];
     suggestedAllergies: string[];
     suggestedDrugs: string[];
+    symptomOnsetQuestions: SymptomOnsetQuestion[];
     updatedAt: string;
   };
+  symptomOnsetQuestions: SymptomOnsetQuestion[];
+}
+
+export interface SymptomOnsetQuestion {
+  id: string;
+  prompt: string;
+  answer: string;
 }
 
 export interface SaveDrugsResponse {
@@ -87,6 +96,25 @@ export interface SaveDrugsResponse {
     selectedDrugs: string[];
     suggestedAllergies: string[];
     suggestedDrugs: string[];
+    symptomOnsetQuestions: SymptomOnsetQuestion[];
     updatedAt: string;
   };
+  symptomOnsetQuestions: SymptomOnsetQuestion[];
+}
+
+export interface SaveSymptomOnsetResponse {
+  message: string;
+  record: {
+    age: number;
+    gender: Gender;
+    chiefComplaint: string;
+    selectedAntecedents: string[];
+    selectedAllergies: string[];
+    selectedDrugs: string[];
+    suggestedAllergies: string[];
+    suggestedDrugs: string[];
+    symptomOnsetQuestions: SymptomOnsetQuestion[];
+    updatedAt: string;
+  };
+  symptomOnsetQuestions: SymptomOnsetQuestion[];
 }

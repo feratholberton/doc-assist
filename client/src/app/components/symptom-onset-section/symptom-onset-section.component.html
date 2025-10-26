@@ -1,0 +1,38 @@
+<section class="symptom-onset" aria-labelledby="symptom-onset-heading">
+  <header class="symptom-onset__header">
+    <h2 id="symptom-onset-heading">Inicio de los síntomas</h2>
+    <p class="symptom-onset__description">
+      Registra la información clave relacionada al inicio del cuadro clínico.
+    </p>
+  </header>
+
+  <div class="symptom-onset__list">
+    @for (question of questions; track question.id) {
+      <div class="symptom-onset__item">
+        <label class="symptom-onset__label" [for]="question.id">{{ question.prompt }}</label>
+        <textarea
+          class="symptom-onset__input"
+          rows="2"
+          [id]="question.id"
+          #answerInput
+          [value]="question.answer"
+          (input)="onInputChange(question, answerInput.value)"
+        ></textarea>
+      </div>
+    }
+  </div>
+
+  <div class="symptom-onset__actions">
+    <button type="button" class="symptom-onset__save" (click)="onSave()" [disabled]="isSaving">
+      {{ isSaving ? 'Guardando…' : 'Guardar inicio de síntomas' }}
+    </button>
+
+    @if (saveMessage) {
+      <p class="symptom-onset__message symptom-onset__message--success">{{ saveMessage }}</p>
+    }
+
+    @if (saveError) {
+      <p class="symptom-onset__message symptom-onset__message--error">{{ saveError }}</p>
+    }
+  </div>
+</section>

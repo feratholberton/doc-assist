@@ -9,7 +9,14 @@ export interface PatientIntakeRecord {
   selectedAllergies: string[];
   suggestedDrugs: string[];
   selectedDrugs: string[];
+  symptomOnsetQuestions: SymptomOnsetQuestion[];
   updatedAt: string;
+}
+
+export interface SymptomOnsetQuestion {
+  id: string;
+  prompt: string;
+  answer: string;
 }
 
 const patientIntakeStore = new Map<string, PatientIntakeRecord>();
@@ -46,6 +53,7 @@ export interface PatientIntakeUpdate {
   selectedAllergies?: string[];
   suggestedDrugs?: string[];
   selectedDrugs?: string[];
+  symptomOnsetQuestions?: SymptomOnsetQuestion[];
 }
 
 export const upsertPatientIntake = (update: PatientIntakeUpdate): PatientIntakeRecord => {
@@ -61,6 +69,7 @@ export const upsertPatientIntake = (update: PatientIntakeUpdate): PatientIntakeR
     selectedAllergies: update.selectedAllergies ?? existing?.selectedAllergies ?? [],
     suggestedDrugs: update.suggestedDrugs ?? existing?.suggestedDrugs ?? [],
     selectedDrugs: update.selectedDrugs ?? existing?.selectedDrugs ?? [],
+    symptomOnsetQuestions: update.symptomOnsetQuestions ?? existing?.symptomOnsetQuestions ?? [],
     updatedAt: new Date().toISOString()
   };
 

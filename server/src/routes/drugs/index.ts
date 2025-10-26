@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from 'fastify'
 import {
   PatientIntakeRecord,
+  SymptomOnsetQuestion,
   buildPatientKey,
   normalizeAntecedents,
   normalizeAllergies,
@@ -23,6 +24,7 @@ interface SaveDrugsRequestBody {
 interface SaveDrugsResponseBody {
   message: string;
   record: PatientIntakeRecord;
+  symptomOnsetQuestions: SymptomOnsetQuestion[];
 }
 
 interface SuggestDrugsRequestBody {
@@ -83,6 +85,14 @@ const buildDrugPrompt = ({
   return lines.filter((line): line is string => typeof line === 'string').join('\n')
 }
 
+const defaultSymptomOnsetQuestions: SymptomOnsetQuestion[] = [
+  { id: 'cuando-comenzo', prompt: '¿Cuándo comenzó el problema?', answer: '' },
+  { id: 'como-inicio', prompt: '¿Cómo fue el inicio?', answer: '' },
+  { id: 'hace-cuanto', prompt: '¿Hace cuánto tiempo presenta los síntomas?', answer: '' },
+  { id: 'evento-desencadenante', prompt: '¿Hubo algún evento desencadenante?', answer: '' },
+  { id: 'nota-personalizada', prompt: 'Nota personalizada', answer: '' }
+];
+
 const drugsRoute: FastifyPluginAsync = async (fastify) => {
   fastify.post<{ Body: SaveDrugsRequestBody; Reply: SaveDrugsResponseBody }>(
     '/',
@@ -115,7 +125,7 @@ const drugsRoute: FastifyPluginAsync = async (fastify) => {
         response: {
           200: {
             type: 'object',
-            required: ['message', 'record'],
+            required: ['message', 'record', 'symptomOnsetQuestions'],
             properties: {
               message: { type: 'string' },
               record: {
@@ -129,6 +139,7 @@ const drugsRoute: FastifyPluginAsync = async (fastify) => {
                   'selectedDrugs',
                   'suggestedAllergies',
                   'suggestedDrugs',
+                  'symptomOnsetQuestions',
                   'updatedAt'
                 ],
                 properties: {
@@ -155,7 +166,31 @@ const drugsRoute: FastifyPluginAsync = async (fastify) => {
                     type: 'array',
                     items: { type: 'string' }
                   },
+                  symptomOnsetQuestions: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      required: ['id', 'prompt', 'answer'],
+                      properties: {
+                        id: { type: 'string' },
+                        prompt: { type: 'string' },
+                        answer: { type: 'string' }
+                      }
+                    }
+                  },
                   updatedAt: { type: 'string' }
+                }
+              },
+              symptomOnsetQuestions: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  required: ['id', 'prompt', 'answer'],
+                  properties: {
+                    id: { type: 'string' },
+                    prompt: { type: 'string' },
+                    answer: { type: 'string' }
+                  }
                 }
               }
             }
@@ -181,14 +216,16 @@ const drugsRoute: FastifyPluginAsync = async (fastify) => {
         chiefComplaint: normalizedChiefComplaint,
         selectedAntecedents: normalizedAntecedentList,
         selectedAllergies: normalizedAllergyList,
-        selectedDrugs: normalizedDrugsList
+        selectedDrugs: normalizedDrugsList,
+        symptomOnsetQuestions: defaultSymptomOnsetQuestions
       })
 
-      request.log.debug({ record }, 'Saved confirmed drugs')
+      request.log.debug({ record }, 'Saved confirmed drugs and initialized symptom onset questions')
 
       return {
         message: 'Medicamentos confirmados guardados.',
-        record
+        record,
+        symptomOnsetQuestions: record.symptomOnsetQuestions
       }
     }
   )

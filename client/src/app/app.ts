@@ -6,6 +6,7 @@ import { PatientIntakeFormComponent } from './components/patient-intake-form/pat
 import { AntecedentsSectionComponent } from './components/antecedents-section/antecedents-section.component';
 import { AllergiesSectionComponent } from './components/allergies-section/allergies-section.component';
 import { DrugsSectionComponent } from './components/drugs-section/drugs-section.component';
+import { SymptomOnsetSectionComponent } from './components/symptom-onset-section/symptom-onset-section.component';
 import { API_BASE_URL } from './config';
 import {
   AllergySuggestionResponse,
@@ -15,6 +16,7 @@ import {
   SaveAntecedentsResponse,
   SaveDrugsResponse,
   StartResponse,
+  SymptomOnsetQuestion
 } from './models/intake.models';
 import { extractAntecedents, extractErrorMessage } from './utils/app-helpers';
 import { IntakeService } from './services/intake.service';
@@ -27,7 +29,8 @@ import { IntakeService } from './services/intake.service';
     PatientIntakeFormComponent,
     AntecedentsSectionComponent,
     AllergiesSectionComponent,
-    DrugsSectionComponent
+    DrugsSectionComponent,
+    SymptomOnsetSectionComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -80,6 +83,10 @@ export class App {
   protected readonly isSavingDrugs = signal(false);
   protected readonly drugSaveMessage = signal<string | null>(null);
   protected readonly drugSaveError = signal<string | null>(null);
+  protected readonly symptomOnsetQuestions = signal<SymptomOnsetQuestion[]>([]);
+  protected readonly isSavingSymptomOnset = signal(false);
+  protected readonly symptomOnsetSaveMessage = signal<string | null>(null);
+  protected readonly symptomOnsetSaveError = signal<string | null>(null);
   protected readonly isSavingAntecedents = signal(false);
   protected readonly antecedentSaveMessage = signal<string | null>(null);
   protected readonly antecedentSaveError = signal<string | null>(null);
@@ -137,6 +144,10 @@ export class App {
     this.isSavingDrugs.set(false);
     this.drugSaveMessage.set(null);
     this.drugSaveError.set(null);
+    this.symptomOnsetQuestions.set([]);
+  this.isSavingSymptomOnset.set(false);
+  this.symptomOnsetSaveMessage.set(null);
+  this.symptomOnsetSaveError.set(null);
     this.isSavingAntecedents.set(false);
     this.antecedentSaveMessage.set(null);
     this.antecedentSaveError.set(null);
@@ -441,6 +452,54 @@ export class App {
     this.drugSaveError.set(null);
   }
 
+  protected updateSymptomOnsetAnswer(id: string, value: string): void {
+    this.symptomOnsetQuestions.update((current) =>
+      current.map((question) =>
+        question.id === id ? { ...question, answer: value } : question
+      )
+    );
+  }
+
+  protected async saveSymptomOnset(): Promise<void> {
+    const questions = this.symptomOnsetQuestions();
+    const answers = questions.map((q) => ({ id: q.id, answer: q.answer ?? '' }));
+
+    if (answers.length === 0) {
+      this.symptomOnsetSaveError.set('No hay preguntas para guardar.');
+      this.symptomOnsetSaveMessage.set(null);
+      return;
+    }
+
+    this.isSavingSymptomOnset.set(true);
+    this.symptomOnsetSaveMessage.set(null);
+    this.symptomOnsetSaveError.set(null);
+
+    const payload = {
+      ...this.intakeForm.getRawValue(),
+      answers
+    };
+
+    try {
+      const response = await firstValueFrom(
+        this.intakeService.saveSymptomOnset(payload)
+      );
+
+      const merged = (response.symptomOnsetQuestions ?? response.record.symptomOnsetQuestions ?? []).map(
+        (q) => {
+          const local = this.symptomOnsetQuestions().find((x) => x.id === q.id);
+          return { ...q, answer: local?.answer ?? q.answer ?? '' };
+        }
+      );
+      this.symptomOnsetQuestions.set(merged);
+      this.symptomOnsetSaveMessage.set(response.message ?? 'Inicio de síntomas guardado.');
+    } catch (error) {
+      const message = extractErrorMessage(error);
+      this.symptomOnsetSaveError.set(message);
+    } finally {
+      this.isSavingSymptomOnset.set(false);
+    }
+  }
+
   protected addCustomDrug(): void {
     const value = this.customDrugText().trim();
     if (!value) {
@@ -596,6 +655,13 @@ export class App {
       );
       this.customDrugs.set(new Set(customItems));
       this.customDrugText.set('');
+      const mergedSymptomQuestions = (response.symptomOnsetQuestions ?? record.symptomOnsetQuestions ?? []).map(
+        (question) => {
+          const existingAnswer = this.symptomOnsetQuestions().find((item) => item.id === question.id)?.answer ?? '';
+          return { ...question, answer: existingAnswer || question.answer || '' };
+        }
+      );
+      this.symptomOnsetQuestions.set(mergedSymptomQuestions);
       this.drugSaveMessage.set(response.message ?? 'Medicamentos confirmados guardados.');
     } catch (error) {
       const message = extractErrorMessage(error);
@@ -660,6 +726,7 @@ export class App {
       this.drugSaveMessage.set(null);
       this.drugSaveError.set(null);
       this.hasSavedAllergies.set(true);
+      this.symptomOnsetQuestions.set([]);
     } catch (error) {
       const message = extractErrorMessage(error);
       this.allergySaveError.set(message);
@@ -703,6 +770,7 @@ export class App {
       this.isSavingDrugs.set(false);
       this.drugSaveMessage.set(null);
       this.drugSaveError.set(null);
+      this.symptomOnsetQuestions.set([]);
     }
 
     const basePayload = this.intakeForm.getRawValue();

@@ -85,6 +85,17 @@
       />
     }
 
+    @if (symptomOnsetQuestions().length > 0) {
+      <app-symptom-onset-section
+        [questions]="symptomOnsetQuestions()"
+        [isSaving]="isSavingSymptomOnset()"
+        [saveMessage]="symptomOnsetSaveMessage()"
+        [saveError]="symptomOnsetSaveError()"
+        (answerChange)="updateSymptomOnsetAnswer($event.id, $event.value)"
+        (saveConfirmed)="saveSymptomOnset()"
+      />
+    }
+
     @if (submissionError(); as error) {
       <section class="result result--error">
         <h2>Submission Failed</h2>

@@ -38,4 +38,8 @@ export class IntakeService {
   saveDrugs(payload: unknown): Observable<SaveDrugsResponse> {
     return this.http.post<SaveDrugsResponse>(`${API_BASE_URL}/drugs`, payload);
   }
+
+  saveSymptomOnset(payload: unknown): Observable<import('../models/intake.models').SaveSymptomOnsetResponse> {
+    return this.http.post<import('../models/intake.models').SaveSymptomOnsetResponse>(`${API_BASE_URL}/symptom-onset`, payload);
+  }
 }
