@@ -1,4 +1,4 @@
-import { Injectable, WritableSignal, computed, signal } from '@angular/core';
+import { Injectable, WritableSignal, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {
   ConfirmAllergiesUseCase,
@@ -18,11 +18,28 @@ import {
   SaveSymptomOnsetUseCase,
   StartIntakeUseCase
 } from '../../application/use-cases/intake';
-import { IntakeRepository } from '../../application/ports/intake.repository';
 import { QuestionStepResult, RedFlagsStepResult, StartIntakeResult } from '../../application/dto/intake.dto';
 import { Gender, IntakeQuestion } from '../../domain/models/intake';
 import { extractAntecedents, extractErrorMessage } from '../../utils/app-helpers';
 import { QuestionSection, SelectionGroup } from './intake-helpers';
+import {
+  START_INTAKE_USE_CASE,
+  CONFIRM_ANTECEDENTS_USE_CASE,
+  REQUEST_ALLERGY_SUGGESTIONS_USE_CASE,
+  CONFIRM_ALLERGIES_USE_CASE,
+  REQUEST_DRUG_SUGGESTIONS_USE_CASE,
+  CONFIRM_DRUGS_USE_CASE,
+  SAVE_SYMPTOM_ONSET_USE_CASE,
+  SAVE_EVALUATION_USE_CASE,
+  SAVE_LOCATION_USE_CASE,
+  SAVE_CHARACTERISTICS_USE_CASE,
+  SAVE_ASSOCIATED_USE_CASE,
+  SAVE_PRECIPITATING_USE_CASE,
+  SAVE_RECENT_EXPOSURES_USE_CASE,
+  SAVE_FUNCTIONAL_IMPACT_USE_CASE,
+  SAVE_PRIOR_THERAPIES_USE_CASE,
+  SAVE_RED_FLAGS_USE_CASE
+} from '../../application/use-cases/intake/intake-use-cases.tokens';
 
 @Injectable({ providedIn: 'root' })
 export class IntakeFacade {
@@ -82,41 +99,33 @@ export class IntakeFacade {
   public readonly copyMessage = signal<string | null>(null);
   public readonly copyError = signal<string | null>(null);
 
-  private readonly fb: FormBuilder;
   public readonly intakeForm: FormGroup;
 
-  private readonly startIntakeUseCase: StartIntakeUseCase;
-  private readonly confirmAntecedentsUseCase: ConfirmAntecedentsUseCase;
-  private readonly requestAllergySuggestionsUseCase: RequestAllergySuggestionsUseCase;
-  private readonly confirmAllergiesUseCase: ConfirmAllergiesUseCase;
-  private readonly requestDrugSuggestionsUseCase: RequestDrugSuggestionsUseCase;
-  private readonly confirmDrugsUseCase: ConfirmDrugsUseCase;
+  private readonly startIntakeUseCase = inject(START_INTAKE_USE_CASE);
+  private readonly confirmAntecedentsUseCase = inject(CONFIRM_ANTECEDENTS_USE_CASE);
+  private readonly requestAllergySuggestionsUseCase = inject(REQUEST_ALLERGY_SUGGESTIONS_USE_CASE);
+  private readonly confirmAllergiesUseCase = inject(CONFIRM_ALLERGIES_USE_CASE);
+  private readonly requestDrugSuggestionsUseCase = inject(REQUEST_DRUG_SUGGESTIONS_USE_CASE);
+  private readonly confirmDrugsUseCase = inject(CONFIRM_DRUGS_USE_CASE);
   
-  constructor(fb: FormBuilder, intakeRepository: IntakeRepository) {
-    this.fb = fb;
-    this.intakeForm = this.fb.nonNullable.group({
+  constructor() {
+    const fb = inject(FormBuilder);
+    this.intakeForm = fb.nonNullable.group({
       age: [30, [Validators.required, Validators.min(0), Validators.max(140)]],
       gender: ['Female' as Gender, [Validators.required]],
       chiefComplaint: ['', [Validators.required, Validators.maxLength(1000)]]
     });
 
-    this.startIntakeUseCase = new StartIntakeUseCase(intakeRepository);
-    this.confirmAntecedentsUseCase = new ConfirmAntecedentsUseCase(intakeRepository);
-    this.requestAllergySuggestionsUseCase = new RequestAllergySuggestionsUseCase(intakeRepository);
-    this.confirmAllergiesUseCase = new ConfirmAllergiesUseCase(intakeRepository);
-    this.requestDrugSuggestionsUseCase = new RequestDrugSuggestionsUseCase(intakeRepository);
-    this.confirmDrugsUseCase = new ConfirmDrugsUseCase(intakeRepository);
-
-    const saveSymptomOnsetUseCase = new SaveSymptomOnsetUseCase(intakeRepository);
-    const saveEvaluationUseCase = new SaveEvaluationUseCase(intakeRepository);
-    const saveLocationUseCase = new SaveLocationUseCase(intakeRepository);
-    const saveCharacteristicsUseCase = new SaveCharacteristicsUseCase(intakeRepository);
-    const saveAssociatedUseCase = new SaveAssociatedUseCase(intakeRepository);
-    const savePrecipitatingUseCase = new SavePrecipitatingUseCase(intakeRepository);
-    const saveRecentExposuresUseCase = new SaveRecentExposuresUseCase(intakeRepository);
-    const saveFunctionalImpactUseCase = new SaveFunctionalImpactUseCase(intakeRepository);
-    const savePriorTherapiesUseCase = new SavePriorTherapiesUseCase(intakeRepository);
-    const saveRedFlagsUseCase = new SaveRedFlagsUseCase(intakeRepository);
+    const saveSymptomOnsetUseCase = inject(SAVE_SYMPTOM_ONSET_USE_CASE);
+    const saveEvaluationUseCase = inject(SAVE_EVALUATION_USE_CASE);
+    const saveLocationUseCase = inject(SAVE_LOCATION_USE_CASE);
+    const saveCharacteristicsUseCase = inject(SAVE_CHARACTERISTICS_USE_CASE);
+    const saveAssociatedUseCase = inject(SAVE_ASSOCIATED_USE_CASE);
+    const savePrecipitatingUseCase = inject(SAVE_PRECIPITATING_USE_CASE);
+    const saveRecentExposuresUseCase = inject(SAVE_RECENT_EXPOSURES_USE_CASE);
+    const saveFunctionalImpactUseCase = inject(SAVE_FUNCTIONAL_IMPACT_USE_CASE);
+    const savePriorTherapiesUseCase = inject(SAVE_PRIOR_THERAPIES_USE_CASE);
+    const saveRedFlagsUseCase = inject(SAVE_RED_FLAGS_USE_CASE);
 
     this.symptomOnsetSection = new QuestionSection(saveSymptomOnsetUseCase, { form: this.intakeForm });
     this.evaluationSection = new QuestionSection(saveEvaluationUseCase, { form: this.intakeForm });

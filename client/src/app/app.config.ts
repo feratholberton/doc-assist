@@ -6,6 +6,7 @@ import { provideClientHydration, withEventReplay } from '@angular/platform-brows
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { IntakeRepository } from './application/ports/intake.repository';
 import { HttpIntakeRepository } from './infrastructure/http/repositories/http-intake.repository';
+import { provideIntakeUseCases } from './application/use-cases/intake/intake-use-cases.providers';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -14,6 +15,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideClientHydration(withEventReplay()),
     provideHttpClient(withFetch()),
-    { provide: IntakeRepository, useExisting: HttpIntakeRepository }
+    { provide: IntakeRepository, useExisting: HttpIntakeRepository },
+    ...provideIntakeUseCases()
   ]
 };
