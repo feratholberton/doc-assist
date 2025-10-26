@@ -6,11 +6,11 @@
     </p>
   </header>
 
-  @if (options.length > 0) {
+  @if (options().length > 0) {
     <fieldset class="drugs__fieldset">
       <legend class="drugs__legend">Selecciona los medicamentos relevantes</legend>
       <div class="drugs__grid">
-        @for (option of options; track option) {
+        @for (option of options(); track option) {
           <label class="drugs__option">
             <input
               #optionInput
@@ -32,9 +32,9 @@
       type="button"
       class="drugs__actions-button"
       (click)="onRequestMore()"
-      [disabled]="isFetching || !canRequestMore"
+      [disabled]="isFetching() || !canRequestMore()"
     >
-      {{ isFetching ? 'Solicitando nuevos medicamentos…' : 'Necesito otros medicamentos' }}
+      {{ isFetching() ? 'Solicitando nuevos medicamentos…' : 'Necesito otros medicamentos' }}
     </button>
   </div>
 
@@ -46,31 +46,31 @@
         type="text"
         class="drugs__custom-input"
         #customDrugInput
-        [value]="customText"
+        [value]="customText()"
         (input)="onCustomTextInput(customDrugInput.value)"
-        [disabled]="isFetching || isSaving"
+        [disabled]="isFetching() || isSaving()"
         placeholder="Ej.: Amoxicilina"
       />
       <button
         type="button"
         class="drugs__custom-add"
         (click)="onAddCustom()"
-        [disabled]="isFetching || isSaving || customText.trim().length === 0"
+        [disabled]="isFetching() || isSaving() || customText().trim().length === 0"
       >
         Añadir
       </button>
     </div>
 
-    @if (customList.length > 0) {
+    @if (customList().length > 0) {
       <ul class="drugs__custom-list">
-        @for (custom of customList; track custom) {
+        @for (custom of customList(); track custom) {
           <li class="drugs__custom-item">
             <span>{{ custom }}</span>
             <button
               type="button"
               class="drugs__custom-remove"
               (click)="onRemoveCustom(custom)"
-              [disabled]="isFetching || isSaving"
+              [disabled]="isFetching() || isSaving()"
             >
               Quitar
             </button>
@@ -80,11 +80,11 @@
     }
   </div>
 
-  @if (selected.length > 0) {
+  @if (selected().length > 0) {
     <div class="drugs__selection">
       <span class="drugs__selection-label">Medicamentos seleccionados:</span>
       <ul class="drugs__selection-list">
-        @for (item of selected; track item) {
+        @for (item of selected(); track item) {
           <li>{{ item }}</li>
         }
       </ul>
@@ -96,17 +96,17 @@
       type="button"
       class="drugs__save-button"
       (click)="onSaveConfirmed()"
-      [disabled]="isSaving || selected.length === 0"
+      [disabled]="isSaving() || selected().length === 0"
     >
-      {{ isSaving ? 'Guardando medicamentos…' : 'Guardar medicamentos confirmados' }}
+      {{ isSaving() ? 'Guardando medicamentos…' : 'Guardar medicamentos confirmados' }}
     </button>
 
-    @if (saveMessage) {
-      <p class="drugs__save-message drugs__save-message--success">{{ saveMessage }}</p>
+    @if (saveMessage()) {
+      <p class="drugs__save-message drugs__save-message--success">{{ saveMessage() }}</p>
     }
 
-    @if (saveError) {
-      <p class="drugs__save-message drugs__save-message--error">{{ saveError }}</p>
+    @if (saveError()) {
+      <p class="drugs__save-message drugs__save-message--error">{{ saveError() }}</p>
     }
   </div>
 </section>

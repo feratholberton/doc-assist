@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
 import { SymptomOnsetQuestion } from '../../models/intake.models';
 
 interface LocationAnswerEvent {
@@ -9,20 +10,19 @@ interface LocationAnswerEvent {
 
 @Component({
   selector: 'app-location-section',
-  standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './location-section.component.html',
   styleUrls: ['./location-section.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LocationSectionComponent {
-  @Input({ required: true }) questions: ReadonlyArray<SymptomOnsetQuestion> = [];
-  @Input() isSaving = false;
-  @Input() saveMessage: string | null = null;
-  @Input() saveError: string | null = null;
+  questions = input.required<ReadonlyArray<SymptomOnsetQuestion>>();
+  isSaving = input(false);
+  saveMessage = input<string | null>(null);
+  saveError = input<string | null>(null);
 
-  @Output() answerChange = new EventEmitter<LocationAnswerEvent>();
-  @Output() saveConfirmed = new EventEmitter<void>();
+  answerChange = output<LocationAnswerEvent>();
+  saveConfirmed = output<void>();
 
   protected onInputChange(question: SymptomOnsetQuestion, value: string): void {
     this.answerChange.emit({ id: question.id, value });

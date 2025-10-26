@@ -1,5 +1,5 @@
 import { Injectable, WritableSignal, computed, inject, signal } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import {
   ConfirmAllergiesUseCase,
   ConfirmAntecedentsUseCase,
@@ -22,6 +22,7 @@ import { QuestionStepResult, RedFlagsStepResult, StartIntakeResult } from '../..
 import { Gender, IntakeQuestion } from '../../domain/models/intake';
 import { extractAntecedents, extractErrorMessage } from '../../utils/app-helpers';
 import { QuestionSection, SelectionGroup } from './intake-helpers';
+import { IntakeFormControls, IntakeFormService } from './intake-form.service';
 import {
   START_INTAKE_USE_CASE,
   CONFIRM_ANTECEDENTS_USE_CASE,
@@ -99,8 +100,9 @@ export class IntakeFacade {
   public readonly copyMessage = signal<string | null>(null);
   public readonly copyError = signal<string | null>(null);
 
-  public readonly intakeForm: FormGroup;
+  public readonly intakeForm: FormGroup<IntakeFormControls>;
 
+  private readonly formService = inject(IntakeFormService);
   private readonly startIntakeUseCase = inject(START_INTAKE_USE_CASE);
   private readonly confirmAntecedentsUseCase = inject(CONFIRM_ANTECEDENTS_USE_CASE);
   private readonly requestAllergySuggestionsUseCase = inject(REQUEST_ALLERGY_SUGGESTIONS_USE_CASE);
@@ -109,12 +111,7 @@ export class IntakeFacade {
   private readonly confirmDrugsUseCase = inject(CONFIRM_DRUGS_USE_CASE);
   
   constructor() {
-    const fb = inject(FormBuilder);
-    this.intakeForm = fb.nonNullable.group({
-      age: [30, [Validators.required, Validators.min(0), Validators.max(140)]],
-      gender: ['Female' as Gender, [Validators.required]],
-      chiefComplaint: ['', [Validators.required, Validators.maxLength(1000)]]
-    });
+    this.intakeForm = this.formService.createIntakeForm();
 
     const saveSymptomOnsetUseCase = inject(SAVE_SYMPTOM_ONSET_USE_CASE);
     const saveEvaluationUseCase = inject(SAVE_EVALUATION_USE_CASE);
@@ -144,8 +141,7 @@ export class IntakeFacade {
   }
 
   public async submit(): Promise<void> {
-    if (this.intakeForm.invalid) {
-      this.intakeForm.markAllAsTouched();
+    if (!this.formService.isFormValid(this.intakeForm)) {
       return;
     }
 
@@ -153,11 +149,7 @@ export class IntakeFacade {
   }
 
   public resetForm(): void {
-    this.intakeForm.reset({
-      age: 30,
-      gender: 'Female' as Gender,
-      chiefComplaint: ''
-    });
+    this.formService.resetForm(this.intakeForm);
     this.resetWorkflowState();
   }
 

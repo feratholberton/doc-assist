@@ -7,7 +7,7 @@
   </header>
 
   <div class="characteristics__list">
-    @for (question of questions; track question.id) {
+    @for (question of questions(); track question.id) {
       <div class="characteristics__item">
         <label class="characteristics__label" [for]="question.id">{{ question.prompt }}</label>
         <textarea
@@ -23,16 +23,16 @@
   </div>
 
   <div class="characteristics__actions">
-    <button type="button" class="characteristics__save" (click)="onSave()" [disabled]="isSaving">
-      {{ isSaving ? 'Guardando…' : 'Guardar características del síntoma' }}
+    <button type="button" class="characteristics__save" (click)="onSave()" [disabled]="isSaving()">
+      {{ isSaving() ? 'Guardando…' : 'Guardar características del síntoma' }}
     </button>
 
-    @if (saveMessage) {
-      <p class="characteristics__message characteristics__message--success">{{ saveMessage }}</p>
+    @if (saveMessage()) {
+      <p class="characteristics__message characteristics__message--success">{{ saveMessage() }}</p>
     }
 
-    @if (saveError) {
-      <p class="characteristics__message characteristics__message--error">{{ saveError }}</p>
+    @if (saveError()) {
+      <p class="characteristics__message characteristics__message--error">{{ saveError() }}</p>
     }
   </div>
 </section>

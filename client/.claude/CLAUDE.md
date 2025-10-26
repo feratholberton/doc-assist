@@ -45,3 +45,76 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Design services around a single responsibility
 - Use the `providedIn: 'root'` option for singleton services
 - Use the `inject()` function instead of constructor injection
+
+## Clean Architecture
+
+This application follows **Clean Architecture** principles with strict layer separation.
+
+### Layer Responsibilities
+
+**Domain Layer** (`domain/`):
+- Pure TypeScript with zero framework dependencies
+- Contains business entities and value objects
+- No imports from other layers
+
+**Application Layer** (`application/`):
+- Use cases (single responsibility, one per business operation)
+- Repository interfaces (ports)
+- DTOs for data transfer
+- Can import from Domain layer only
+
+**Infrastructure Layer** (`infrastructure/`):
+- Implements repository interfaces
+- Handles HTTP, external services, and I/O
+- Can import from Domain and Application layers
+- No business logic
+
+**Presentation Layer** (`presentation/`):
+- Components delegate logic to facades
+- Facades orchestrate use cases
+- Can import from all layers
+- Use signals for reactive state
+
+### Dependency Rule
+
+Dependencies must point inward:
+```
+Domain ← Application ← Infrastructure
+  ↑                        ↑
+  └────── Presentation ────┘
+```
+
+### Design Patterns
+
+**Repository Pattern**:
+- Define abstract repositories in Application layer
+- Implement in Infrastructure layer
+- Register with DI: `{ provide: Repository, useExisting: HttpRepository }`
+
+**Use Case Pattern**:
+- Each business operation = one use case class
+- Implement `UseCase<TCommand, TResult>` interface
+- Constructor receives repository dependencies
+
+**Dependency Injection with Tokens**:
+- Create `InjectionToken` for each use case
+- Use factory providers in `provideUseCases()` function
+- Inject via `inject(TOKEN)` function
+
+**Example**:
+```typescript
+// Token
+export const START_INTAKE_USE_CASE = new InjectionToken<StartIntakeUseCase>('START_INTAKE_USE_CASE');
+
+// Provider
+export function provideIntakeUseCases(): Provider[] {
+  return [{
+    provide: START_INTAKE_USE_CASE,
+    useFactory: (repo: IntakeRepository) => new StartIntakeUseCase(repo),
+    deps: [IntakeRepository]
+  }];
+}
+
+// Usage in facade
+private readonly startUseCase = inject(START_INTAKE_USE_CASE);
+```

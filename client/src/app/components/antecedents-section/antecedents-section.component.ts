@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 interface ToggleAntecedentEvent {
@@ -8,31 +8,30 @@ interface ToggleAntecedentEvent {
 
 @Component({
   selector: 'app-antecedents-section',
-  standalone: true,
   imports: [CommonModule],
   templateUrl: './antecedents-section.component.html',
   styleUrls: ['./antecedents-section.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AntecedentsSectionComponent {
-  @Input({ required: true }) model!: string;
-  @Input({ required: true }) answer!: string;
-  @Input({ required: true }) options: ReadonlyArray<string> = [];
-  @Input({ required: true }) selected: ReadonlyArray<string> = [];
-  @Input({ required: true }) customList: ReadonlyArray<string> = [];
-  @Input({ required: true }) customText = '';
-  @Input() isSubmitting = false;
-  @Input() canRequestMore = true;
-  @Input() isSaving = false;
-  @Input() saveMessage: string | null = null;
-  @Input() saveError: string | null = null;
+  model = input.required<string>();
+  answer = input.required<string>();
+  options = input.required<ReadonlyArray<string>>();
+  selected = input.required<ReadonlyArray<string>>();
+  customList = input.required<ReadonlyArray<string>>();
+  customText = input.required<string>();
+  isSubmitting = input(false);
+  canRequestMore = input(true);
+  isSaving = input(false);
+  saveMessage = input<string | null>(null);
+  saveError = input<string | null>(null);
 
-  @Output() requestMore = new EventEmitter<void>();
-  @Output() toggleOption = new EventEmitter<ToggleAntecedentEvent>();
-  @Output() addCustom = new EventEmitter<void>();
-  @Output() customTextChange = new EventEmitter<string>();
-  @Output() removeCustom = new EventEmitter<string>();
-  @Output() saveConfirmed = new EventEmitter<void>();
+  requestMore = output<void>();
+  toggleOption = output<ToggleAntecedentEvent>();
+  addCustom = output<void>();
+  customTextChange = output<string>();
+  removeCustom = output<string>();
+  saveConfirmed = output<void>();
 
   protected onCheckboxChange(option: string, checked: boolean): void {
     this.toggleOption.emit({ option, checked });
@@ -55,7 +54,7 @@ export class AntecedentsSectionComponent {
   }
 
   protected isSelected(option: string): boolean {
-    return this.selected.includes(option);
+    return this.selected().includes(option);
   }
 
   protected onSaveConfirmed(): void {

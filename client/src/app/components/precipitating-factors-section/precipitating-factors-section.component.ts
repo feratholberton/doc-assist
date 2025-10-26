@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
 import { SymptomOnsetQuestion } from '../../models/intake.models';
 
 interface PrecipitatingAnswerEvent {
@@ -9,20 +10,19 @@ interface PrecipitatingAnswerEvent {
 
 @Component({
   selector: 'app-precipitating-factors-section',
-  standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './precipitating-factors-section.component.html',
   styleUrls: ['./precipitating-factors-section.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PrecipitatingFactorsSectionComponent {
-  @Input({ required: true }) questions: ReadonlyArray<SymptomOnsetQuestion> = [];
-  @Input() isSaving = false;
-  @Input() saveMessage: string | null = null;
-  @Input() saveError: string | null = null;
+  questions = input.required<ReadonlyArray<SymptomOnsetQuestion>>();
+  isSaving = input(false);
+  saveMessage = input<string | null>(null);
+  saveError = input<string | null>(null);
 
-  @Output() answerChange = new EventEmitter<PrecipitatingAnswerEvent>();
-  @Output() saveConfirmed = new EventEmitter<void>();
+  answerChange = output<PrecipitatingAnswerEvent>();
+  saveConfirmed = output<void>();
 
   protected onInputChange(question: SymptomOnsetQuestion, value: string): void {
     this.answerChange.emit({ id: question.id, value });

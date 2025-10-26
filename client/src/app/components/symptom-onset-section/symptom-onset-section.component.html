@@ -7,7 +7,7 @@
   </header>
 
   <div class="symptom-onset__list">
-    @for (question of questions; track question.id) {
+    @for (question of questions(); track question.id) {
       <div class="symptom-onset__item">
         <label class="symptom-onset__label" [for]="question.id">{{ question.prompt }}</label>
         <textarea
@@ -23,16 +23,16 @@
   </div>
 
   <div class="symptom-onset__actions">
-    <button type="button" class="symptom-onset__save" (click)="onSave()" [disabled]="isSaving">
-      {{ isSaving ? 'Guardando…' : 'Guardar inicio de síntomas' }}
+    <button type="button" class="symptom-onset__save" (click)="onSave()" [disabled]="isSaving()">
+      {{ isSaving() ? 'Guardando…' : 'Guardar inicio de síntomas' }}
     </button>
 
-    @if (saveMessage) {
-      <p class="symptom-onset__message symptom-onset__message--success">{{ saveMessage }}</p>
+    @if (saveMessage()) {
+      <p class="symptom-onset__message symptom-onset__message--success">{{ saveMessage() }}</p>
     }
 
-    @if (saveError) {
-      <p class="symptom-onset__message symptom-onset__message--error">{{ saveError }}</p>
+    @if (saveError()) {
+      <p class="symptom-onset__message symptom-onset__message--error">{{ saveError() }}</p>
     }
   </div>
 </section>

@@ -7,7 +7,7 @@
   </header>
 
   <div class="location__list">
-    @for (question of questions; track question.id) {
+    @for (question of questions(); track question.id) {
       <div class="location__item">
         <label class="location__label" [for]="question.id">{{ question.prompt }}</label>
         <textarea
@@ -23,16 +23,16 @@
   </div>
 
   <div class="location__actions">
-    <button type="button" class="location__save" (click)="onSave()" [disabled]="isSaving">
-      {{ isSaving ? 'Guardando…' : 'Guardar localización y características' }}
+    <button type="button" class="location__save" (click)="onSave()" [disabled]="isSaving()">
+      {{ isSaving() ? 'Guardando…' : 'Guardar ubicación y irradiación' }}
     </button>
 
-    @if (saveMessage) {
-      <p class="location__message location__message--success">{{ saveMessage }}</p>
+    @if (saveMessage()) {
+      <p class="location__message location__message--success">{{ saveMessage() }}</p>
     }
 
-    @if (saveError) {
-      <p class="location__message location__message--error">{{ saveError }}</p>
+    @if (saveError()) {
+      <p class="location__message location__message--error">{{ saveError() }}</p>
     }
   </div>
 </section>

@@ -6,11 +6,11 @@
     </p>
   </header>
 
-  @if (options.length > 0) {
+  @if (options().length > 0) {
     <fieldset class="allergies__fieldset">
       <legend class="allergies__legend">Selecciona las alergias relevantes</legend>
       <div class="allergies__grid">
-        @for (option of options; track option) {
+        @for (option of options(); track option) {
           <label class="allergies__option">
             <input
               #optionInput
@@ -32,9 +32,9 @@
       type="button"
       class="allergies__actions-button"
       (click)="onRequestMore()"
-      [disabled]="isFetching || !canRequestMore"
+      [disabled]="isFetching() || !canRequestMore()"
     >
-      {{ isFetching ? 'Solicitando nuevas alergias…' : 'Necesito otras alergias' }}
+      {{ isFetching() ? 'Solicitando nuevas alergias…' : 'Necesito otras alergias' }}
     </button>
   </div>
 
@@ -46,31 +46,31 @@
         type="text"
         class="allergies__custom-input"
         #customAllergyInput
-        [value]="customText"
+        [value]="customText()"
         (input)="onCustomTextInput(customAllergyInput.value)"
-        [disabled]="isFetching || isSaving"
+        [disabled]="isFetching() || isSaving()"
         placeholder="Ej.: Penicilina"
       />
       <button
         type="button"
         class="allergies__custom-add"
         (click)="onAddCustom()"
-        [disabled]="isFetching || isSaving || customText.trim().length === 0"
+        [disabled]="isFetching() || isSaving() || customText().trim().length === 0"
       >
         Añadir
       </button>
     </div>
 
-    @if (customList.length > 0) {
+    @if (customList().length > 0) {
       <ul class="allergies__custom-list">
-        @for (custom of customList; track custom) {
+        @for (custom of customList(); track custom) {
           <li class="allergies__custom-item">
             <span>{{ custom }}</span>
             <button
               type="button"
               class="allergies__custom-remove"
               (click)="onRemoveCustom(custom)"
-              [disabled]="isFetching || isSaving"
+              [disabled]="isFetching() || isSaving()"
             >
               Quitar
             </button>
@@ -80,11 +80,11 @@
     }
   </div>
 
-  @if (selected.length > 0) {
+  @if (selected().length > 0) {
     <div class="allergies__selection">
       <span class="allergies__selection-label">Alergias seleccionadas:</span>
       <ul class="allergies__selection-list">
-        @for (item of selected; track item) {
+        @for (item of selected(); track item) {
           <li>{{ item }}</li>
         }
       </ul>
@@ -96,17 +96,17 @@
       type="button"
       class="allergies__save-button"
       (click)="onSaveConfirmed()"
-      [disabled]="isSaving || selected.length === 0"
+      [disabled]="isSaving() || selected().length === 0"
     >
-      {{ isSaving ? 'Guardando alergias…' : 'Guardar alergias confirmadas' }}
+      {{ isSaving() ? 'Guardando alergias…' : 'Guardar alergias confirmadas' }}
     </button>
 
-    @if (saveMessage) {
-      <p class="allergies__save-message allergies__save-message--success">{{ saveMessage }}</p>
+    @if (saveMessage()) {
+      <p class="allergies__save-message allergies__save-message--success">{{ saveMessage() }}</p>
     }
 
-    @if (saveError) {
-      <p class="allergies__save-message allergies__save-message--error">{{ saveError }}</p>
+    @if (saveError()) {
+      <p class="allergies__save-message allergies__save-message--error">{{ saveError() }}</p>
     }
   </div>
 </section>

@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
 import { SymptomOnsetQuestion } from '../../models/intake.models';
 
 interface FunctionalImpactAnswerEvent {
@@ -9,20 +10,19 @@ interface FunctionalImpactAnswerEvent {
 
 @Component({
   selector: 'app-functional-impact-section',
-  standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './functional-impact-section.component.html',
   styleUrls: ['./functional-impact-section.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FunctionalImpactSectionComponent {
-  @Input({ required: true }) questions: ReadonlyArray<SymptomOnsetQuestion> = [];
-  @Input() isSaving = false;
-  @Input() saveMessage: string | null = null;
-  @Input() saveError: string | null = null;
+  questions = input.required<ReadonlyArray<SymptomOnsetQuestion>>();
+  isSaving = input(false);
+  saveMessage = input<string | null>(null);
+  saveError = input<string | null>(null);
 
-  @Output() answerChange = new EventEmitter<FunctionalImpactAnswerEvent>();
-  @Output() saveConfirmed = new EventEmitter<void>();
+  answerChange = output<FunctionalImpactAnswerEvent>();
+  saveConfirmed = output<void>();
 
   protected onInputChange(question: SymptomOnsetQuestion, value: string): void {
     this.answerChange.emit({ id: question.id, value });

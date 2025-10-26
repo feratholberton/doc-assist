@@ -7,7 +7,7 @@
   </header>
 
   <div class="precipitating__list">
-    @for (question of questions; track question.id) {
+    @for (question of questions(); track question.id) {
       <div class="precipitating__item">
         <label class="precipitating__label" [for]="question.id">{{ question.prompt }}</label>
         <textarea
@@ -23,16 +23,16 @@
   </div>
 
   <div class="precipitating__actions">
-    <button type="button" class="precipitating__save" (click)="onSave()" [disabled]="isSaving">
-      {{ isSaving ? 'Guardando…' : 'Guardar factores y contexto' }}
+    <button type="button" class="precipitating__save" (click)="onSave()" [disabled]="isSaving()">
+      {{ isSaving() ? 'Guardando…' : 'Guardar factores precipitantes' }}
     </button>
 
-    @if (saveMessage) {
-      <p class="precipitating__message precipitating__message--success">{{ saveMessage }}</p>
+    @if (saveMessage()) {
+      <p class="precipitating__message precipitating__message--success">{{ saveMessage() }}</p>
     }
 
-    @if (saveError) {
-      <p class="precipitating__message precipitating__message--error">{{ saveError }}</p>
+    @if (saveError()) {
+      <p class="precipitating__message precipitating__message--error">{{ saveError() }}</p>
     }
   </div>
 </section>

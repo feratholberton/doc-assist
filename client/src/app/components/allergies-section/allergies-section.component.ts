@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 interface ToggleAllergyEvent {
@@ -8,29 +8,28 @@ interface ToggleAllergyEvent {
 
 @Component({
   selector: 'app-allergies-section',
-  standalone: true,
   imports: [CommonModule],
   templateUrl: './allergies-section.component.html',
   styleUrls: ['./allergies-section.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AllergiesSectionComponent {
-  @Input({ required: true }) options: ReadonlyArray<string> = [];
-  @Input({ required: true }) selected: ReadonlyArray<string> = [];
-  @Input({ required: true }) customList: ReadonlyArray<string> = [];
-  @Input({ required: true }) customText = '';
-  @Input() canRequestMore = true;
-  @Input() isFetching = false;
-  @Input() isSaving = false;
-  @Input() saveMessage: string | null = null;
-  @Input() saveError: string | null = null;
+  options = input.required<ReadonlyArray<string>>();
+  selected = input.required<ReadonlyArray<string>>();
+  customList = input.required<ReadonlyArray<string>>();
+  customText = input.required<string>();
+  canRequestMore = input(true);
+  isFetching = input(false);
+  isSaving = input(false);
+  saveMessage = input<string | null>(null);
+  saveError = input<string | null>(null);
 
-  @Output() toggleOption = new EventEmitter<ToggleAllergyEvent>();
-  @Output() requestMore = new EventEmitter<void>();
-  @Output() addCustom = new EventEmitter<void>();
-  @Output() customTextChange = new EventEmitter<string>();
-  @Output() removeCustom = new EventEmitter<string>();
-  @Output() saveConfirmed = new EventEmitter<void>();
+  toggleOption = output<ToggleAllergyEvent>();
+  requestMore = output<void>();
+  addCustom = output<void>();
+  customTextChange = output<string>();
+  removeCustom = output<string>();
+  saveConfirmed = output<void>();
 
   protected onCheckboxChange(option: string, checked: boolean): void {
     this.toggleOption.emit({ option, checked });
@@ -57,6 +56,6 @@ export class AllergiesSectionComponent {
   }
 
   protected isSelected(option: string): boolean {
-    return this.selected.includes(option);
+    return this.selected().includes(option);
   }
 }

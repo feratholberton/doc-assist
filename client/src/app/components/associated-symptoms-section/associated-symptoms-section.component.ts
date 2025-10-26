@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
 import { SymptomOnsetQuestion } from '../../models/intake.models';
 
 interface AssociatedAnswerEvent {
@@ -9,20 +10,19 @@ interface AssociatedAnswerEvent {
 
 @Component({
   selector: 'app-associated-symptoms-section',
-  standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './associated-symptoms-section.component.html',
   styleUrls: ['./associated-symptoms-section.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AssociatedSymptomsSectionComponent {
-  @Input({ required: true }) questions: ReadonlyArray<SymptomOnsetQuestion> = [];
-  @Input() isSaving = false;
-  @Input() saveMessage: string | null = null;
-  @Input() saveError: string | null = null;
+  questions = input.required<ReadonlyArray<SymptomOnsetQuestion>>();
+  isSaving = input(false);
+  saveMessage = input<string | null>(null);
+  saveError = input<string | null>(null);
 
-  @Output() answerChange = new EventEmitter<AssociatedAnswerEvent>();
-  @Output() saveConfirmed = new EventEmitter<void>();
+  answerChange = output<AssociatedAnswerEvent>();
+  saveConfirmed = output<void>();
 
   protected onInputChange(question: SymptomOnsetQuestion, value: string): void {
     this.answerChange.emit({ id: question.id, value });

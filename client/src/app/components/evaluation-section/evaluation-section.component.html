@@ -7,7 +7,7 @@
   </header>
 
   <div class="evaluation__list">
-    @for (question of questions; track question.id) {
+    @for (question of questions(); track question.id) {
       <div class="evaluation__item">
         <label class="evaluation__label" [for]="question.id">{{ question.prompt }}</label>
         <textarea
@@ -23,16 +23,16 @@
   </div>
 
   <div class="evaluation__actions">
-    <button type="button" class="evaluation__save" (click)="onSave()" [disabled]="isSaving">
-      {{ isSaving ? 'Guardando…' : 'Guardar evaluación y patrón temporal' }}
+    <button type="button" class="evaluation__save" (click)="onSave()" [disabled]="isSaving()">
+      {{ isSaving() ? 'Guardando…' : 'Guardar evaluación y patrón temporal' }}
     </button>
 
-    @if (saveMessage) {
-      <p class="evaluation__message evaluation__message--success">{{ saveMessage }}</p>
+    @if (saveMessage()) {
+      <p class="evaluation__message evaluation__message--success">{{ saveMessage() }}</p>
     }
 
-    @if (saveError) {
-      <p class="evaluation__message evaluation__message--error">{{ saveError }}</p>
+    @if (saveError()) {
+      <p class="evaluation__message evaluation__message--error">{{ saveError() }}</p>
     }
   </div>
 </section>

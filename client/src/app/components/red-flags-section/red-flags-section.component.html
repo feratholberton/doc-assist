@@ -2,7 +2,7 @@
   <h2 id="red-flags-heading" class="section__title">Síntomas de alarma (red flags)</h2>
 
   <div class="questions">
-    @for (q of questions; track q.id) {
+    @for (q of questions(); track q.id) {
       <div class="question">
         <label class="question__label" [for]="q.id">{{ q.prompt }}</label>
         <textarea
@@ -18,15 +18,15 @@
   </div>
 
   <div class="actions">
-    <button class="btn" (click)="onSave()" [disabled]="isSaving">
-      {{ isSaving ? 'Guardando…' : 'Guardar' }}
+    <button class="btn" (click)="onSave()" [disabled]="isSaving()">
+      {{ isSaving() ? 'Guardando…' : 'Guardar' }}
     </button>
   </div>
 
-  @if (saveMessage) {
-    <p class="status status--success">{{ saveMessage }}</p>
+  @if (saveMessage()) {
+    <p class="status status--success">{{ saveMessage() }}</p>
   }
-  @if (saveError) {
-    <p class="status status--error">{{ saveError }}</p>
+  @if (saveError()) {
+    <p class="status status--error">{{ saveError() }}</p>
   }
 </section>
