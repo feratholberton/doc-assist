@@ -173,6 +173,17 @@
       />
     }
 
+    @if (priorTherapiesQuestions().length > 0) {
+      <app-prior-therapies-section
+        [questions]="priorTherapiesQuestions()"
+        [isSaving]="isSavingPriorTherapies()"
+        [saveMessage]="priorTherapiesSaveMessage()"
+        [saveError]="priorTherapiesSaveError()"
+        (answerChange)="updatePriorTherapiesAnswer($event.id, $event.value)"
+        (saveConfirmed)="savePriorTherapies()"
+      />
+    }
+
     @if (submissionError(); as error) {
       <section class="result result--error">
         <h2>Submission Failed</h2>

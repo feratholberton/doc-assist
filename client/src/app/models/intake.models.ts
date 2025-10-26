@@ -275,7 +275,34 @@ export interface SaveFunctionalImpactResponse {
     precipitatingFactorsQuestions: SymptomOnsetQuestion[];
     recentExposuresQuestions: SymptomOnsetQuestion[];
     functionalImpactQuestions: SymptomOnsetQuestion[];
+    priorTherapiesQuestions: SymptomOnsetQuestion[];
     updatedAt: string;
   };
   functionalImpactQuestions: SymptomOnsetQuestion[];
+  priorTherapiesQuestions: SymptomOnsetQuestion[];
+}
+
+export interface SavePriorTherapiesResponse {
+  message: string;
+  record: {
+    age: number;
+    gender: Gender;
+    chiefComplaint: string;
+    selectedAntecedents: string[];
+    selectedAllergies: string[];
+    selectedDrugs: string[];
+    suggestedAllergies: string[];
+    suggestedDrugs: string[];
+    symptomOnsetQuestions: SymptomOnsetQuestion[];
+    evaluationQuestions: SymptomOnsetQuestion[];
+    locationQuestions: SymptomOnsetQuestion[];
+    characteristicsQuestions: SymptomOnsetQuestion[];
+    associatedSymptomsQuestions: SymptomOnsetQuestion[];
+    precipitatingFactorsQuestions: SymptomOnsetQuestion[];
+    recentExposuresQuestions: SymptomOnsetQuestion[];
+    functionalImpactQuestions: SymptomOnsetQuestion[];
+    priorTherapiesQuestions: SymptomOnsetQuestion[];
+    updatedAt: string;
+  };
+  priorTherapiesQuestions: SymptomOnsetQuestion[];
 }

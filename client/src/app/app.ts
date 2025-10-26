@@ -14,6 +14,7 @@ import { AssociatedSymptomsSectionComponent } from './components/associated-symp
 import { PrecipitatingFactorsSectionComponent } from './components/precipitating-factors-section/precipitating-factors-section.component';
 import { RecentExposuresSectionComponent } from './components/recent-exposures-section/recent-exposures-section.component';
 import { FunctionalImpactSectionComponent } from './components/functional-impact-section/functional-impact-section.component';
+import { PriorTherapiesSectionComponent } from './components/prior-therapies-section/prior-therapies-section.component';
 import { API_BASE_URL } from './config';
 import {
   AllergySuggestionResponse,
@@ -45,6 +46,7 @@ import { IntakeService } from './services/intake.service';
     ,PrecipitatingFactorsSectionComponent
     ,RecentExposuresSectionComponent
     ,FunctionalImpactSectionComponent
+    ,PriorTherapiesSectionComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -129,6 +131,10 @@ export class App {
   protected readonly isSavingFunctionalImpact = signal(false);
   protected readonly functionalImpactSaveMessage = signal<string | null>(null);
   protected readonly functionalImpactSaveError = signal<string | null>(null);
+  protected readonly priorTherapiesQuestions = signal<SymptomOnsetQuestion[]>([]);
+  protected readonly isSavingPriorTherapies = signal(false);
+  protected readonly priorTherapiesSaveMessage = signal<string | null>(null);
+  protected readonly priorTherapiesSaveError = signal<string | null>(null);
   protected readonly isSavingAntecedents = signal(false);
   protected readonly antecedentSaveMessage = signal<string | null>(null);
   protected readonly antecedentSaveError = signal<string | null>(null);
@@ -218,6 +224,10 @@ export class App {
   this.isSavingFunctionalImpact.set(false);
   this.functionalImpactSaveMessage.set(null);
   this.functionalImpactSaveError.set(null);
+  this.priorTherapiesQuestions.set([]);
+  this.isSavingPriorTherapies.set(false);
+  this.priorTherapiesSaveMessage.set(null);
+  this.priorTherapiesSaveError.set(null);
     this.isSavingAntecedents.set(false);
     this.antecedentSaveMessage.set(null);
     this.antecedentSaveError.set(null);
@@ -925,12 +935,64 @@ export class App {
         }
       );
       this.functionalImpactQuestions.set(merged);
+      const next = (response.priorTherapiesQuestions ?? response.record.priorTherapiesQuestions ?? []).map(
+        (q) => ({ ...q, answer: q.answer ?? '' })
+      );
+      if (next.length > 0) {
+        this.priorTherapiesQuestions.set(next);
+      }
       this.functionalImpactSaveMessage.set(response.message ?? 'Impacto funcional y calidad de vida guardados.');
     } catch (error) {
       const message = extractErrorMessage(error);
       this.functionalImpactSaveError.set(message);
     } finally {
       this.isSavingFunctionalImpact.set(false);
+    }
+  }
+
+  protected updatePriorTherapiesAnswer(id: string, value: string): void {
+    this.priorTherapiesQuestions.update((current) =>
+      current.map((q) => (q.id === id ? { ...q, answer: value } : q))
+    );
+  }
+
+  protected async savePriorTherapies(): Promise<void> {
+    const questions = this.priorTherapiesQuestions();
+    const answers = questions.map((q) => ({ id: q.id, answer: q.answer ?? '' }));
+
+    if (answers.length === 0) {
+      this.priorTherapiesSaveError.set('No hay preguntas para guardar.');
+      this.priorTherapiesSaveMessage.set(null);
+      return;
+    }
+
+    this.isSavingPriorTherapies.set(true);
+    this.priorTherapiesSaveMessage.set(null);
+    this.priorTherapiesSaveError.set(null);
+
+    const payload = {
+      ...this.intakeForm.getRawValue(),
+      answers
+    };
+
+    try {
+      const response = await firstValueFrom(
+        this.intakeService.savePriorTherapies(payload)
+      );
+
+      const merged = (response.priorTherapiesQuestions ?? response.record.priorTherapiesQuestions ?? []).map(
+        (q) => {
+          const local = this.priorTherapiesQuestions().find((x) => x.id === q.id);
+          return { ...q, answer: local?.answer ?? q.answer ?? '' };
+        }
+      );
+      this.priorTherapiesQuestions.set(merged);
+      this.priorTherapiesSaveMessage.set(response.message ?? 'Tratamientos previos y automedicación guardados.');
+    } catch (error) {
+      const message = extractErrorMessage(error);
+      this.priorTherapiesSaveError.set(message);
+    } finally {
+      this.isSavingPriorTherapies.set(false);
     }
   }
 

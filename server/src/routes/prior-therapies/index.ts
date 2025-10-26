@@ -8,22 +8,21 @@ import {
   upsertPatientIntake
 } from '../../stores/patient-intake-store.js'
 
-interface SaveFunctionalImpactRequestBody {
+interface SavePriorTherapiesRequestBody {
   age: number;
   gender: 'Male' | 'Female';
   chiefComplaint: string;
   answers: Array<{ id: string; answer: string }>;
 }
 
-interface SaveFunctionalImpactResponseBody {
+interface SavePriorTherapiesResponseBody {
   message: string;
   record: PatientIntakeRecord;
-  functionalImpactQuestions: SymptomOnsetQuestion[];
   priorTherapiesQuestions: SymptomOnsetQuestion[];
 }
 
-const functionalImpactRoute: FastifyPluginAsync = async (fastify) => {
-  fastify.post<{ Body: SaveFunctionalImpactRequestBody; Reply: SaveFunctionalImpactResponseBody }>(
+const priorTherapiesRoute: FastifyPluginAsync = async (fastify) => {
+  fastify.post<{ Body: SavePriorTherapiesRequestBody; Reply: SavePriorTherapiesResponseBody }>(
     '/',
     {
       schema: {
@@ -51,7 +50,7 @@ const functionalImpactRoute: FastifyPluginAsync = async (fastify) => {
         response: {
           200: {
             type: 'object',
-            required: ['message', 'record', 'functionalImpactQuestions', 'priorTherapiesQuestions'],
+            required: ['message', 'record', 'priorTherapiesQuestions'],
             properties: {
               message: { type: 'string' },
               record: {
@@ -196,18 +195,6 @@ const functionalImpactRoute: FastifyPluginAsync = async (fastify) => {
                   updatedAt: { type: 'string' }
                 }
               },
-              functionalImpactQuestions: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  required: ['id', 'prompt', 'answer'],
-                  properties: {
-                    id: { type: 'string' },
-                    prompt: { type: 'string' },
-                    answer: { type: 'string' }
-                  }
-                }
-              },
               priorTherapiesQuestions: {
                 type: 'array',
                 items: {
@@ -232,7 +219,7 @@ const functionalImpactRoute: FastifyPluginAsync = async (fastify) => {
       const key = buildPatientKey(age, gender, normalizedChiefComplaint)
       const existing = getPatientIntake(key)
 
-      const baseQuestions: SymptomOnsetQuestion[] = existing?.functionalImpactQuestions ?? []
+      const baseQuestions: SymptomOnsetQuestion[] = existing?.priorTherapiesQuestions ?? []
       const answersById = new Map(answers.map((a) => [a.id, (a.answer ?? '').trim()]))
       const updatedQuestions = baseQuestions.map((q) => ({
         id: q.id,
@@ -240,34 +227,22 @@ const functionalImpactRoute: FastifyPluginAsync = async (fastify) => {
         answer: answersById.get(q.id) ?? q.answer ?? ''
       }))
 
-      // Define default next section questions (Prior therapies and self-treatment)
-      const defaultPriorTherapiesQuestions: SymptomOnsetQuestion[] = [
-        { id: 'medicacion-alivio', prompt: '¿Tomó alguna medicación para aliviarlo? ¿Cuál? ¿Dosis?', answer: '' },
-        { id: 'le-hizo-efecto', prompt: '¿Le hizo efecto? ¿Cuánto tiempo después de tomarlo?', answer: '' },
-        { id: 'atencion-medica-previa', prompt: '¿Recibió atención médica antes de esta consulta? ¿Dónde?', answer: '' },
-        { id: 'estudios-indicados', prompt: '¿Le indicaron estudios? ¿Tiene los resultados?', answer: '' },
-        { id: 'remedios-caseros', prompt: '¿Usa remedios caseros o medicina alternativa?', answer: '' },
-        { id: 'nota-personalizada-pt', prompt: 'Nota personalizada', answer: '' }
-      ]
-
       const record = upsertPatientIntake({
         age,
         gender,
         chiefComplaint: normalizedChiefComplaint,
-        functionalImpactQuestions: updatedQuestions,
-        priorTherapiesQuestions: existing?.priorTherapiesQuestions?.length ? existing.priorTherapiesQuestions : defaultPriorTherapiesQuestions
+        priorTherapiesQuestions: updatedQuestions
       })
 
-      request.log.debug({ key, updatedQuestions }, 'Saved functional impact and QoL answers')
+      request.log.debug({ key, updatedQuestions }, 'Saved prior therapies and self-treatment answers')
 
       return {
-        message: 'Impacto funcional y calidad de vida guardados.',
+        message: 'Tratamientos previos y automedicación guardados.',
         record,
-        functionalImpactQuestions: record.functionalImpactQuestions,
         priorTherapiesQuestions: record.priorTherapiesQuestions
       }
     }
   )
 }
 
-export default functionalImpactRoute
+export default priorTherapiesRoute

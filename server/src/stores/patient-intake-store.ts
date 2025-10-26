@@ -17,6 +17,7 @@ export interface PatientIntakeRecord {
   precipitatingFactorsQuestions: SymptomOnsetQuestion[];
   recentExposuresQuestions: SymptomOnsetQuestion[];
   functionalImpactQuestions: SymptomOnsetQuestion[];
+  priorTherapiesQuestions: SymptomOnsetQuestion[];
   updatedAt: string;
 }
 
@@ -68,6 +69,7 @@ export interface PatientIntakeUpdate {
   precipitatingFactorsQuestions?: SymptomOnsetQuestion[];
   recentExposuresQuestions?: SymptomOnsetQuestion[];
   functionalImpactQuestions?: SymptomOnsetQuestion[];
+  priorTherapiesQuestions?: SymptomOnsetQuestion[];
 }
 
 export const upsertPatientIntake = (update: PatientIntakeUpdate): PatientIntakeRecord => {
@@ -91,6 +93,7 @@ export const upsertPatientIntake = (update: PatientIntakeUpdate): PatientIntakeR
     precipitatingFactorsQuestions: update.precipitatingFactorsQuestions ?? existing?.precipitatingFactorsQuestions ?? [],
     recentExposuresQuestions: update.recentExposuresQuestions ?? existing?.recentExposuresQuestions ?? [],
     functionalImpactQuestions: update.functionalImpactQuestions ?? existing?.functionalImpactQuestions ?? [],
+    priorTherapiesQuestions: update.priorTherapiesQuestions ?? existing?.priorTherapiesQuestions ?? [],
     updatedAt: new Date().toISOString()
   };
 

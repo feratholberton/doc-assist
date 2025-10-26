@@ -1,0 +1,32 @@
+<section class="section" aria-labelledby="prior-therapies-heading">
+  <h2 id="prior-therapies-heading" class="section__title">Tratamientos previos y automedicación</h2>
+
+  <div class="questions">
+    @for (q of questions; track q.id) {
+      <div class="question">
+        <label class="question__label" [for]="q.id">{{ q.prompt }}</label>
+        <textarea
+          class="question__input"
+          rows="2"
+          [id]="q.id"
+          #answerInput
+          [value]="q.answer || ''"
+          (input)="onInputChange(q, answerInput.value)"
+        ></textarea>
+      </div>
+    }
+  </div>
+
+  <div class="actions">
+    <button class="btn" (click)="onSave()" [disabled]="isSaving">
+      {{ isSaving ? 'Guardando…' : 'Guardar' }}
+    </button>
+  </div>
+
+  @if (saveMessage) {
+    <p class="status status--success">{{ saveMessage }}</p>
+  }
+  @if (saveError) {
+    <p class="status status--error">{{ saveError }}</p>
+  }
+</section>
