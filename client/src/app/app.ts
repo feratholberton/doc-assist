@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { PatientIntakeFormComponent } from './components/patient-intake-form/patient-intake-form.component';
@@ -18,6 +17,7 @@ import {
   StartResponse,
 } from './models/intake.models';
 import { extractAntecedents, extractErrorMessage } from './utils/app-helpers';
+import { IntakeService } from './services/intake.service';
 
 @Component({
   selector: 'app-root',
@@ -85,7 +85,7 @@ export class App {
   protected readonly antecedentSaveError = signal<string | null>(null);
 
   private readonly fb = inject(FormBuilder);
-  private readonly http = inject(HttpClient);
+  private readonly intakeService = inject(IntakeService);
 
   protected readonly intakeForm = this.fb.nonNullable.group({
     age: [30, [Validators.required, Validators.min(0), Validators.max(140)]],
@@ -259,7 +259,7 @@ export class App {
 
     try {
       const response = await firstValueFrom(
-        this.http.post<SaveAntecedentsResponse>(`${API_BASE_URL}/antecedents`, payload)
+        this.intakeService.saveAntecedents(payload)
       );
       const baseMessage = response.message ?? 'Antecedentes confirmados guardados.';
       const suggestedAllergies = response.suggestedAllergies ?? [];
@@ -383,7 +383,7 @@ export class App {
 
     try {
       const response = await firstValueFrom(
-        this.http.post<AllergySuggestionResponse>(`${API_BASE_URL}/allergies/suggest`, payload)
+        this.intakeService.suggestAllergies(payload)
       );
 
       const newSuggestions = response.suggestedAllergies ?? [];
@@ -512,7 +512,7 @@ export class App {
 
     try {
       const response = await firstValueFrom(
-        this.http.post<DrugSuggestionResponse>(`${API_BASE_URL}/drugs/suggest`, payload)
+        this.intakeService.suggestDrugs(payload)
       );
 
       const newSuggestions = response.suggestedDrugs ?? [];
@@ -582,7 +582,7 @@ export class App {
 
     try {
       const response = await firstValueFrom(
-        this.http.post<SaveDrugsResponse>(`${API_BASE_URL}/drugs`, payload)
+        this.intakeService.saveDrugs(payload)
       );
 
       const record = response.record;
@@ -629,7 +629,7 @@ export class App {
 
     try {
       const response = await firstValueFrom(
-        this.http.post<SaveAllergiesResponse>(`${API_BASE_URL}/allergies`, payload)
+        this.intakeService.saveAllergies(payload)
       );
 
       const record = response.record;
@@ -717,7 +717,7 @@ export class App {
 
     try {
       const response = await firstValueFrom(
-        this.http.post<StartResponse>(`${API_BASE_URL}/start`, payload)
+        this.intakeService.start(payload)
       );
 
       const antecedents = extractAntecedents(response.answer);
