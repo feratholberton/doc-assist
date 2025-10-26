@@ -15,6 +15,7 @@ import { PrecipitatingFactorsSectionComponent } from './components/precipitating
 import { RecentExposuresSectionComponent } from './components/recent-exposures-section/recent-exposures-section.component';
 import { FunctionalImpactSectionComponent } from './components/functional-impact-section/functional-impact-section.component';
 import { PriorTherapiesSectionComponent } from './components/prior-therapies-section/prior-therapies-section.component';
+import { RedFlagsSectionComponent } from './components/red-flags-section/red-flags-section.component';
 import { API_BASE_URL } from './config';
 import {
   AllergySuggestionResponse,
@@ -47,6 +48,7 @@ import { IntakeService } from './services/intake.service';
     ,RecentExposuresSectionComponent
     ,FunctionalImpactSectionComponent
     ,PriorTherapiesSectionComponent
+    ,RedFlagsSectionComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -135,6 +137,10 @@ export class App {
   protected readonly isSavingPriorTherapies = signal(false);
   protected readonly priorTherapiesSaveMessage = signal<string | null>(null);
   protected readonly priorTherapiesSaveError = signal<string | null>(null);
+  protected readonly redFlagsQuestions = signal<SymptomOnsetQuestion[]>([]);
+  protected readonly isSavingRedFlags = signal(false);
+  protected readonly redFlagsSaveMessage = signal<string | null>(null);
+  protected readonly redFlagsSaveError = signal<string | null>(null);
   protected readonly isSavingAntecedents = signal(false);
   protected readonly antecedentSaveMessage = signal<string | null>(null);
   protected readonly antecedentSaveError = signal<string | null>(null);
@@ -228,6 +234,10 @@ export class App {
   this.isSavingPriorTherapies.set(false);
   this.priorTherapiesSaveMessage.set(null);
   this.priorTherapiesSaveError.set(null);
+  this.redFlagsQuestions.set([]);
+  this.isSavingRedFlags.set(false);
+  this.redFlagsSaveMessage.set(null);
+  this.redFlagsSaveError.set(null);
     this.isSavingAntecedents.set(false);
     this.antecedentSaveMessage.set(null);
     this.antecedentSaveError.set(null);
@@ -987,12 +997,64 @@ export class App {
         }
       );
       this.priorTherapiesQuestions.set(merged);
+      const next = (response.redFlagsQuestions ?? response.record.redFlagsQuestions ?? []).map(
+        (q) => ({ ...q, answer: q.answer ?? '' })
+      );
+      if (next.length > 0) {
+        this.redFlagsQuestions.set(next);
+      }
       this.priorTherapiesSaveMessage.set(response.message ?? 'Tratamientos previos y automedicación guardados.');
     } catch (error) {
       const message = extractErrorMessage(error);
       this.priorTherapiesSaveError.set(message);
     } finally {
       this.isSavingPriorTherapies.set(false);
+    }
+  }
+
+  protected updateRedFlagsAnswer(id: string, value: string): void {
+    this.redFlagsQuestions.update((current) =>
+      current.map((q) => (q.id === id ? { ...q, answer: value } : q))
+    );
+  }
+
+  protected async saveRedFlags(): Promise<void> {
+    const questions = this.redFlagsQuestions();
+    const answers = questions.map((q) => ({ id: q.id, answer: q.answer ?? '' }));
+
+    if (answers.length === 0) {
+      this.redFlagsSaveError.set('No hay preguntas para guardar.');
+      this.redFlagsSaveMessage.set(null);
+      return;
+    }
+
+    this.isSavingRedFlags.set(true);
+    this.redFlagsSaveMessage.set(null);
+    this.redFlagsSaveError.set(null);
+
+    const payload = {
+      ...this.intakeForm.getRawValue(),
+      answers
+    };
+
+    try {
+      const response = await firstValueFrom(
+        this.intakeService.saveRedFlags(payload)
+      );
+
+      const merged = (response.redFlagsQuestions ?? response.record.redFlagsQuestions ?? []).map(
+        (q) => {
+          const local = this.redFlagsQuestions().find((x) => x.id === q.id);
+          return { ...q, answer: local?.answer ?? q.answer ?? '' };
+        }
+      );
+      this.redFlagsQuestions.set(merged);
+      this.redFlagsSaveMessage.set(response.message ?? 'Síntomas de alarma guardados.');
+    } catch (error) {
+      const message = extractErrorMessage(error);
+      this.redFlagsSaveError.set(message);
+    } finally {
+      this.isSavingRedFlags.set(false);
     }
   }
 
@@ -1286,6 +1348,18 @@ export class App {
       this.isSavingRecentExposures.set(false);
       this.recentExposuresSaveMessage.set(null);
       this.recentExposuresSaveError.set(null);
+      this.functionalImpactQuestions.set([]);
+      this.isSavingFunctionalImpact.set(false);
+      this.functionalImpactSaveMessage.set(null);
+      this.functionalImpactSaveError.set(null);
+      this.priorTherapiesQuestions.set([]);
+      this.isSavingPriorTherapies.set(false);
+      this.priorTherapiesSaveMessage.set(null);
+      this.priorTherapiesSaveError.set(null);
+      this.redFlagsQuestions.set([]);
+      this.isSavingRedFlags.set(false);
+      this.redFlagsSaveMessage.set(null);
+      this.redFlagsSaveError.set(null);
     }
 
     const basePayload = this.intakeForm.getRawValue();

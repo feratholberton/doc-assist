@@ -184,6 +184,17 @@
       />
     }
 
+    @if (redFlagsQuestions().length > 0) {
+      <app-red-flags-section
+        [questions]="redFlagsQuestions()"
+        [isSaving]="isSavingRedFlags()"
+        [saveMessage]="redFlagsSaveMessage()"
+        [saveError]="redFlagsSaveError()"
+        (answerChange)="updateRedFlagsAnswer($event.id, $event.value)"
+        (saveConfirmed)="saveRedFlags()"
+      />
+    }
+
     @if (submissionError(); as error) {
       <section class="result result--error">
         <h2>Submission Failed</h2>

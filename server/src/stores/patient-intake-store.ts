@@ -18,6 +18,7 @@ export interface PatientIntakeRecord {
   recentExposuresQuestions: SymptomOnsetQuestion[];
   functionalImpactQuestions: SymptomOnsetQuestion[];
   priorTherapiesQuestions: SymptomOnsetQuestion[];
+  redFlagsQuestions: SymptomOnsetQuestion[];
   updatedAt: string;
 }
 
@@ -70,6 +71,7 @@ export interface PatientIntakeUpdate {
   recentExposuresQuestions?: SymptomOnsetQuestion[];
   functionalImpactQuestions?: SymptomOnsetQuestion[];
   priorTherapiesQuestions?: SymptomOnsetQuestion[];
+  redFlagsQuestions?: SymptomOnsetQuestion[];
 }
 
 export const upsertPatientIntake = (update: PatientIntakeUpdate): PatientIntakeRecord => {
@@ -94,6 +96,7 @@ export const upsertPatientIntake = (update: PatientIntakeUpdate): PatientIntakeR
     recentExposuresQuestions: update.recentExposuresQuestions ?? existing?.recentExposuresQuestions ?? [],
     functionalImpactQuestions: update.functionalImpactQuestions ?? existing?.functionalImpactQuestions ?? [],
     priorTherapiesQuestions: update.priorTherapiesQuestions ?? existing?.priorTherapiesQuestions ?? [],
+    redFlagsQuestions: update.redFlagsQuestions ?? existing?.redFlagsQuestions ?? [],
     updatedAt: new Date().toISOString()
   };
 

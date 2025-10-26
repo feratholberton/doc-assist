@@ -302,7 +302,35 @@ export interface SavePriorTherapiesResponse {
     recentExposuresQuestions: SymptomOnsetQuestion[];
     functionalImpactQuestions: SymptomOnsetQuestion[];
     priorTherapiesQuestions: SymptomOnsetQuestion[];
+    redFlagsQuestions: SymptomOnsetQuestion[];
     updatedAt: string;
   };
   priorTherapiesQuestions: SymptomOnsetQuestion[];
+  redFlagsQuestions: SymptomOnsetQuestion[];
+}
+
+export interface SaveRedFlagsResponse {
+  message: string;
+  record: {
+    age: number;
+    gender: Gender;
+    chiefComplaint: string;
+    selectedAntecedents: string[];
+    selectedAllergies: string[];
+    selectedDrugs: string[];
+    suggestedAllergies: string[];
+    suggestedDrugs: string[];
+    symptomOnsetQuestions: SymptomOnsetQuestion[];
+    evaluationQuestions: SymptomOnsetQuestion[];
+    locationQuestions: SymptomOnsetQuestion[];
+    characteristicsQuestions: SymptomOnsetQuestion[];
+    associatedSymptomsQuestions: SymptomOnsetQuestion[];
+    precipitatingFactorsQuestions: SymptomOnsetQuestion[];
+    recentExposuresQuestions: SymptomOnsetQuestion[];
+    functionalImpactQuestions: SymptomOnsetQuestion[];
+    priorTherapiesQuestions: SymptomOnsetQuestion[];
+    redFlagsQuestions: SymptomOnsetQuestion[];
+    updatedAt: string;
+  };
+  redFlagsQuestions: SymptomOnsetQuestion[];
 }
