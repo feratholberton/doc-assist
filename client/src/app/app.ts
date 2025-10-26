@@ -9,6 +9,7 @@ import { DrugsSectionComponent } from './components/drugs-section/drugs-section.
 import { SymptomOnsetSectionComponent } from './components/symptom-onset-section/symptom-onset-section.component';
 import { EvaluationSectionComponent } from './components/evaluation-section/evaluation-section.component';
 import { LocationSectionComponent } from './components/location-section/location-section.component';
+import { CharacteristicsSectionComponent } from './components/characteristics-section/characteristics-section.component';
 import { API_BASE_URL } from './config';
 import {
   AllergySuggestionResponse,
@@ -34,7 +35,8 @@ import { IntakeService } from './services/intake.service';
     DrugsSectionComponent,
     SymptomOnsetSectionComponent,
     EvaluationSectionComponent,
-    LocationSectionComponent
+    LocationSectionComponent,
+    CharacteristicsSectionComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -99,6 +101,10 @@ export class App {
   protected readonly isSavingLocation = signal(false);
   protected readonly locationSaveMessage = signal<string | null>(null);
   protected readonly locationSaveError = signal<string | null>(null);
+  protected readonly characteristicsQuestions = signal<SymptomOnsetQuestion[]>([]);
+  protected readonly isSavingCharacteristics = signal(false);
+  protected readonly characteristicsSaveMessage = signal<string | null>(null);
+  protected readonly characteristicsSaveError = signal<string | null>(null);
   protected readonly isSavingAntecedents = signal(false);
   protected readonly antecedentSaveMessage = signal<string | null>(null);
   protected readonly antecedentSaveError = signal<string | null>(null);
@@ -168,6 +174,10 @@ export class App {
   this.isSavingLocation.set(false);
   this.locationSaveMessage.set(null);
   this.locationSaveError.set(null);
+  this.characteristicsQuestions.set([]);
+  this.isSavingCharacteristics.set(false);
+  this.characteristicsSaveMessage.set(null);
+  this.characteristicsSaveError.set(null);
     this.isSavingAntecedents.set(false);
     this.antecedentSaveMessage.set(null);
     this.antecedentSaveError.set(null);
@@ -615,12 +625,64 @@ export class App {
         }
       );
       this.locationQuestions.set(merged);
+      const characteristics = (response.characteristicsQuestions ?? response.record.characteristicsQuestions ?? []).map(
+        (q) => ({ ...q, answer: q.answer ?? '' })
+      );
+      if (characteristics.length > 0) {
+        this.characteristicsQuestions.set(characteristics);
+      }
       this.locationSaveMessage.set(response.message ?? 'Localización guardada.');
     } catch (error) {
       const message = extractErrorMessage(error);
       this.locationSaveError.set(message);
     } finally {
       this.isSavingLocation.set(false);
+    }
+  }
+
+  protected updateCharacteristicsAnswer(id: string, value: string): void {
+    this.characteristicsQuestions.update((current) =>
+      current.map((q) => (q.id === id ? { ...q, answer: value } : q))
+    );
+  }
+
+  protected async saveCharacteristics(): Promise<void> {
+    const questions = this.characteristicsQuestions();
+    const answers = questions.map((q) => ({ id: q.id, answer: q.answer ?? '' }));
+
+    if (answers.length === 0) {
+      this.characteristicsSaveError.set('No hay preguntas para guardar.');
+      this.characteristicsSaveMessage.set(null);
+      return;
+    }
+
+    this.isSavingCharacteristics.set(true);
+    this.characteristicsSaveMessage.set(null);
+    this.characteristicsSaveError.set(null);
+
+    const payload = {
+      ...this.intakeForm.getRawValue(),
+      answers
+    };
+
+    try {
+      const response = await firstValueFrom(
+        this.intakeService.saveCharacteristics(payload)
+      );
+
+      const merged = (response.characteristicsQuestions ?? response.record.characteristicsQuestions ?? []).map(
+        (q) => {
+          const local = this.characteristicsQuestions().find((x) => x.id === q.id);
+          return { ...q, answer: local?.answer ?? q.answer ?? '' };
+        }
+      );
+      this.characteristicsQuestions.set(merged);
+      this.characteristicsSaveMessage.set(response.message ?? 'Características del síntoma guardadas.');
+    } catch (error) {
+      const message = extractErrorMessage(error);
+      this.characteristicsSaveError.set(message);
+    } finally {
+      this.isSavingCharacteristics.set(false);
     }
   }
 
@@ -853,6 +915,8 @@ export class App {
       this.hasSavedAllergies.set(true);
   this.symptomOnsetQuestions.set([]);
   this.evaluationQuestions.set([]);
+  this.locationQuestions.set([]);
+  this.characteristicsQuestions.set([]);
     } catch (error) {
       const message = extractErrorMessage(error);
       this.allergySaveError.set(message);
@@ -898,6 +962,8 @@ export class App {
       this.drugSaveError.set(null);
       this.symptomOnsetQuestions.set([]);
       this.evaluationQuestions.set([]);
+      this.locationQuestions.set([]);
+      this.characteristicsQuestions.set([]);
     }
 
     const basePayload = this.intakeForm.getRawValue();

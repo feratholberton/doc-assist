@@ -155,7 +155,29 @@ export interface SaveLocationResponse {
     symptomOnsetQuestions: SymptomOnsetQuestion[];
     evaluationQuestions: SymptomOnsetQuestion[];
     locationQuestions: SymptomOnsetQuestion[];
+    characteristicsQuestions: SymptomOnsetQuestion[];
     updatedAt: string;
   };
   locationQuestions: SymptomOnsetQuestion[];
+  characteristicsQuestions: SymptomOnsetQuestion[];
+}
+
+export interface SaveCharacteristicsResponse {
+  message: string;
+  record: {
+    age: number;
+    gender: Gender;
+    chiefComplaint: string;
+    selectedAntecedents: string[];
+    selectedAllergies: string[];
+    selectedDrugs: string[];
+    suggestedAllergies: string[];
+    suggestedDrugs: string[];
+    symptomOnsetQuestions: SymptomOnsetQuestion[];
+    evaluationQuestions: SymptomOnsetQuestion[];
+    locationQuestions: SymptomOnsetQuestion[];
+    characteristicsQuestions: SymptomOnsetQuestion[];
+    updatedAt: string;
+  };
+  characteristicsQuestions: SymptomOnsetQuestion[];
 }

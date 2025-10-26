@@ -8,22 +8,21 @@ import {
   upsertPatientIntake
 } from '../../stores/patient-intake-store.js'
 
-interface SaveLocationRequestBody {
+interface SaveCharacteristicsRequestBody {
   age: number;
   gender: 'Male' | 'Female';
   chiefComplaint: string;
   answers: Array<{ id: string; answer: string }>;
 }
 
-interface SaveLocationResponseBody {
+interface SaveCharacteristicsResponseBody {
   message: string;
   record: PatientIntakeRecord;
-  locationQuestions: SymptomOnsetQuestion[];
   characteristicsQuestions: SymptomOnsetQuestion[];
 }
 
-const locationRoute: FastifyPluginAsync = async (fastify) => {
-  fastify.post<{ Body: SaveLocationRequestBody; Reply: SaveLocationResponseBody }>(
+const characteristicsRoute: FastifyPluginAsync = async (fastify) => {
+  fastify.post<{ Body: SaveCharacteristicsRequestBody; Reply: SaveCharacteristicsResponseBody }>(
     '/',
     {
       schema: {
@@ -51,7 +50,7 @@ const locationRoute: FastifyPluginAsync = async (fastify) => {
         response: {
           200: {
             type: 'object',
-            required: ['message', 'record', 'locationQuestions', 'characteristicsQuestions'],
+            required: ['message', 'record', 'characteristicsQuestions'],
             properties: {
               message: { type: 'string' },
               record: {
@@ -131,18 +130,6 @@ const locationRoute: FastifyPluginAsync = async (fastify) => {
                   updatedAt: { type: 'string' }
                 }
               },
-              locationQuestions: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  required: ['id', 'prompt', 'answer'],
-                  properties: {
-                    id: { type: 'string' },
-                    prompt: { type: 'string' },
-                    answer: { type: 'string' }
-                  }
-                }
-              },
               characteristicsQuestions: {
                 type: 'array',
                 items: {
@@ -167,7 +154,7 @@ const locationRoute: FastifyPluginAsync = async (fastify) => {
       const key = buildPatientKey(age, gender, normalizedChiefComplaint)
       const existing = getPatientIntake(key)
 
-      const baseQuestions: SymptomOnsetQuestion[] = existing?.locationQuestions ?? []
+      const baseQuestions: SymptomOnsetQuestion[] = existing?.characteristicsQuestions ?? []
       const answersById = new Map(answers.map((a) => [a.id, (a.answer ?? '').trim()]))
       const updatedQuestions = baseQuestions.map((q) => ({
         id: q.id,
@@ -175,34 +162,22 @@ const locationRoute: FastifyPluginAsync = async (fastify) => {
         answer: answersById.get(q.id) ?? q.answer ?? ''
       }))
 
-      // Define default next section questions (Symptom characteristics)
-      const defaultCharacteristicsQuestions: SymptomOnsetQuestion[] = [
-        { id: 'descripcion', prompt: '¿Cómo lo describiría?', answer: '' },
-        { id: 'intensidad-escala', prompt: '¿Qué intensidad tiene en una escala del 1 al 10?', answer: '' },
-        { id: 'duracion-episodio', prompt: '¿Cuánto dura cada episodio?', answer: '' },
-        { id: 'que-lo-alivia', prompt: '¿Qué lo alivia?', answer: '' },
-        { id: 'que-lo-empeora', prompt: '¿Qué lo empeora?', answer: '' },
-        { id: 'nota-personalizada-car', prompt: 'Nota personalizada', answer: '' }
-      ]
-
       const record = upsertPatientIntake({
         age,
         gender,
         chiefComplaint: normalizedChiefComplaint,
-        locationQuestions: updatedQuestions,
-        characteristicsQuestions: existing?.characteristicsQuestions?.length ? existing.characteristicsQuestions : defaultCharacteristicsQuestions
+        characteristicsQuestions: updatedQuestions
       })
 
-      request.log.debug({ key, updatedQuestions }, 'Saved location/characteristics answers')
+      request.log.debug({ key, updatedQuestions }, 'Saved symptom characteristics answers')
 
       return {
-        message: 'Localización y características guardadas.',
+        message: 'Características del síntoma guardadas.',
         record,
-        locationQuestions: record.locationQuestions,
         characteristicsQuestions: record.characteristicsQuestions
       }
     }
   )
 }
 
-export default locationRoute
+export default characteristicsRoute

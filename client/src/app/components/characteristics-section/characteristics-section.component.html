@@ -1,0 +1,38 @@
+<section class="characteristics" aria-labelledby="characteristics-heading">
+  <header class="characteristics__header">
+    <h2 id="characteristics-heading">Características del síntoma</h2>
+    <p class="characteristics__description">
+      Describe las características del síntoma principal.
+    </p>
+  </header>
+
+  <div class="characteristics__list">
+    @for (question of questions; track question.id) {
+      <div class="characteristics__item">
+        <label class="characteristics__label" [for]="question.id">{{ question.prompt }}</label>
+        <textarea
+          class="characteristics__input"
+          rows="2"
+          [id]="question.id"
+          #answerInput
+          [value]="question.answer"
+          (input)="onInputChange(question, answerInput.value)"
+        ></textarea>
+      </div>
+    }
+  </div>
+
+  <div class="characteristics__actions">
+    <button type="button" class="characteristics__save" (click)="onSave()" [disabled]="isSaving">
+      {{ isSaving ? 'Guardando…' : 'Guardar características del síntoma' }}
+    </button>
+
+    @if (saveMessage) {
+      <p class="characteristics__message characteristics__message--success">{{ saveMessage }}</p>
+    }
+
+    @if (saveError) {
+      <p class="characteristics__message characteristics__message--error">{{ saveError }}</p>
+    }
+  </div>
+</section>

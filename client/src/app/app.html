@@ -118,6 +118,17 @@
       />
     }
 
+    @if (characteristicsQuestions().length > 0) {
+      <app-characteristics-section
+        [questions]="characteristicsQuestions()"
+        [isSaving]="isSavingCharacteristics()"
+        [saveMessage]="characteristicsSaveMessage()"
+        [saveError]="characteristicsSaveError()"
+        (answerChange)="updateCharacteristicsAnswer($event.id, $event.value)"
+        (saveConfirmed)="saveCharacteristics()"
+      />
+    }
+
     @if (submissionError(); as error) {
       <section class="result result--error">
         <h2>Submission Failed</h2>
