@@ -8,22 +8,21 @@ import {
   upsertPatientIntake
 } from '../../stores/patient-intake-store.js'
 
-interface SaveRecentExposuresRequestBody {
+interface SaveFunctionalImpactRequestBody {
   age: number;
   gender: 'Male' | 'Female';
   chiefComplaint: string;
   answers: Array<{ id: string; answer: string }>;
 }
 
-interface SaveRecentExposuresResponseBody {
+interface SaveFunctionalImpactResponseBody {
   message: string;
   record: PatientIntakeRecord;
-  recentExposuresQuestions: SymptomOnsetQuestion[];
   functionalImpactQuestions: SymptomOnsetQuestion[];
 }
 
-const recentExposuresRoute: FastifyPluginAsync = async (fastify) => {
-  fastify.post<{ Body: SaveRecentExposuresRequestBody; Reply: SaveRecentExposuresResponseBody }>(
+const functionalImpactRoute: FastifyPluginAsync = async (fastify) => {
+  fastify.post<{ Body: SaveFunctionalImpactRequestBody; Reply: SaveFunctionalImpactResponseBody }>(
     '/',
     {
       schema: {
@@ -51,7 +50,7 @@ const recentExposuresRoute: FastifyPluginAsync = async (fastify) => {
         response: {
           200: {
             type: 'object',
-            required: ['message', 'record', 'recentExposuresQuestions', 'functionalImpactQuestions'],
+            required: ['message', 'record', 'functionalImpactQuestions'],
             properties: {
               message: { type: 'string' },
               record: {
@@ -183,18 +182,6 @@ const recentExposuresRoute: FastifyPluginAsync = async (fastify) => {
                   updatedAt: { type: 'string' }
                 }
               },
-              recentExposuresQuestions: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  required: ['id', 'prompt', 'answer'],
-                  properties: {
-                    id: { type: 'string' },
-                    prompt: { type: 'string' },
-                    answer: { type: 'string' }
-                  }
-                }
-              },
               functionalImpactQuestions: {
                 type: 'array',
                 items: {
@@ -219,7 +206,7 @@ const recentExposuresRoute: FastifyPluginAsync = async (fastify) => {
       const key = buildPatientKey(age, gender, normalizedChiefComplaint)
       const existing = getPatientIntake(key)
 
-      const baseQuestions: SymptomOnsetQuestion[] = existing?.recentExposuresQuestions ?? []
+      const baseQuestions: SymptomOnsetQuestion[] = existing?.functionalImpactQuestions ?? []
       const answersById = new Map(answers.map((a) => [a.id, (a.answer ?? '').trim()]))
       const updatedQuestions = baseQuestions.map((q) => ({
         id: q.id,
@@ -227,34 +214,22 @@ const recentExposuresRoute: FastifyPluginAsync = async (fastify) => {
         answer: answersById.get(q.id) ?? q.answer ?? ''
       }))
 
-      // Define default next section questions (Functional impact and quality of life)
-      const defaultFunctionalImpactQuestions: SymptomOnsetQuestion[] = [
-        { id: 'impide-actividades', prompt: '¿Le impide realizar sus actividades habituales?', answer: '' },
-        { id: 'quedo-en-cama-falto', prompt: '¿Tuvo que quedarse en cama o faltar al trabajo/estudio?', answer: '' },
-        { id: 'afecto-sueno', prompt: '¿Ha afectado su sueño?', answer: '' },
-        { id: 'afecto-apetito', prompt: '¿Ha afectado su apetito?', answer: '' },
-        { id: 'afecto-estado-animo', prompt: '¿Ha afectado su estado de ánimo?', answer: '' },
-        { id: 'nota-personalizada-fi', prompt: 'Nota personalizada', answer: '' }
-      ]
-
       const record = upsertPatientIntake({
         age,
         gender,
         chiefComplaint: normalizedChiefComplaint,
-        recentExposuresQuestions: updatedQuestions,
-        functionalImpactQuestions: existing?.functionalImpactQuestions?.length ? existing.functionalImpactQuestions : defaultFunctionalImpactQuestions
+        functionalImpactQuestions: updatedQuestions
       })
 
-      request.log.debug({ key, updatedQuestions }, 'Saved recent exposures and contacts answers')
+      request.log.debug({ key, updatedQuestions }, 'Saved functional impact and QoL answers')
 
       return {
-        message: 'Antecedentes recientes y contactos guardados.',
+        message: 'Impacto funcional y calidad de vida guardados.',
         record,
-        recentExposuresQuestions: record.recentExposuresQuestions,
         functionalImpactQuestions: record.functionalImpactQuestions
       }
     }
   )
 }
 
-export default recentExposuresRoute
+export default functionalImpactRoute

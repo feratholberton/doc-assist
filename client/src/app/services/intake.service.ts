@@ -14,6 +14,7 @@ import {
   SaveAssociatedResponse,
   SavePrecipitatingResponse,
   SaveRecentExposuresResponse,
+  SaveFunctionalImpactResponse,
   StartResponse,
 } from '../models/intake.models';
 
@@ -71,5 +72,9 @@ export class IntakeService {
 
   saveRecentExposures(payload: unknown): Observable<SaveRecentExposuresResponse> {
     return this.http.post<SaveRecentExposuresResponse>(`${API_BASE_URL}/recent-exposures`, payload);
+  }
+
+  saveFunctionalImpact(payload: unknown): Observable<SaveFunctionalImpactResponse> {
+    return this.http.post<SaveFunctionalImpactResponse>(`${API_BASE_URL}/functional-impact`, payload);
   }
 }

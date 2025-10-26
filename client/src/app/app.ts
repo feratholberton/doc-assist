@@ -13,6 +13,7 @@ import { CharacteristicsSectionComponent } from './components/characteristics-se
 import { AssociatedSymptomsSectionComponent } from './components/associated-symptoms-section/associated-symptoms-section.component';
 import { PrecipitatingFactorsSectionComponent } from './components/precipitating-factors-section/precipitating-factors-section.component';
 import { RecentExposuresSectionComponent } from './components/recent-exposures-section/recent-exposures-section.component';
+import { FunctionalImpactSectionComponent } from './components/functional-impact-section/functional-impact-section.component';
 import { API_BASE_URL } from './config';
 import {
   AllergySuggestionResponse,
@@ -43,6 +44,7 @@ import { IntakeService } from './services/intake.service';
     AssociatedSymptomsSectionComponent
     ,PrecipitatingFactorsSectionComponent
     ,RecentExposuresSectionComponent
+    ,FunctionalImpactSectionComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -123,6 +125,10 @@ export class App {
   protected readonly isSavingRecentExposures = signal(false);
   protected readonly recentExposuresSaveMessage = signal<string | null>(null);
   protected readonly recentExposuresSaveError = signal<string | null>(null);
+  protected readonly functionalImpactQuestions = signal<SymptomOnsetQuestion[]>([]);
+  protected readonly isSavingFunctionalImpact = signal(false);
+  protected readonly functionalImpactSaveMessage = signal<string | null>(null);
+  protected readonly functionalImpactSaveError = signal<string | null>(null);
   protected readonly isSavingAntecedents = signal(false);
   protected readonly antecedentSaveMessage = signal<string | null>(null);
   protected readonly antecedentSaveError = signal<string | null>(null);
@@ -208,6 +214,10 @@ export class App {
   this.isSavingRecentExposures.set(false);
   this.recentExposuresSaveMessage.set(null);
   this.recentExposuresSaveError.set(null);
+  this.functionalImpactQuestions.set([]);
+  this.isSavingFunctionalImpact.set(false);
+  this.functionalImpactSaveMessage.set(null);
+  this.functionalImpactSaveError.set(null);
     this.isSavingAntecedents.set(false);
     this.antecedentSaveMessage.set(null);
     this.antecedentSaveError.set(null);
@@ -863,12 +873,64 @@ export class App {
         }
       );
       this.recentExposuresQuestions.set(merged);
+      const fi = (response.functionalImpactQuestions ?? response.record.functionalImpactQuestions ?? []).map(
+        (q) => ({ ...q, answer: q.answer ?? '' })
+      );
+      if (fi.length > 0) {
+        this.functionalImpactQuestions.set(fi);
+      }
       this.recentExposuresSaveMessage.set(response.message ?? 'Antecedentes recientes y contactos guardados.');
     } catch (error) {
       const message = extractErrorMessage(error);
       this.recentExposuresSaveError.set(message);
     } finally {
       this.isSavingRecentExposures.set(false);
+    }
+  }
+
+  protected updateFunctionalImpactAnswer(id: string, value: string): void {
+    this.functionalImpactQuestions.update((current) =>
+      current.map((q) => (q.id === id ? { ...q, answer: value } : q))
+    );
+  }
+
+  protected async saveFunctionalImpact(): Promise<void> {
+    const questions = this.functionalImpactQuestions();
+    const answers = questions.map((q) => ({ id: q.id, answer: q.answer ?? '' }));
+
+    if (answers.length === 0) {
+      this.functionalImpactSaveError.set('No hay preguntas para guardar.');
+      this.functionalImpactSaveMessage.set(null);
+      return;
+    }
+
+    this.isSavingFunctionalImpact.set(true);
+    this.functionalImpactSaveMessage.set(null);
+    this.functionalImpactSaveError.set(null);
+
+    const payload = {
+      ...this.intakeForm.getRawValue(),
+      answers
+    };
+
+    try {
+      const response = await firstValueFrom(
+        this.intakeService.saveFunctionalImpact(payload)
+      );
+
+      const merged = (response.functionalImpactQuestions ?? response.record.functionalImpactQuestions ?? []).map(
+        (q) => {
+          const local = this.functionalImpactQuestions().find((x) => x.id === q.id);
+          return { ...q, answer: local?.answer ?? q.answer ?? '' };
+        }
+      );
+      this.functionalImpactQuestions.set(merged);
+      this.functionalImpactSaveMessage.set(response.message ?? 'Impacto funcional y calidad de vida guardados.');
+    } catch (error) {
+      const message = extractErrorMessage(error);
+      this.functionalImpactSaveError.set(message);
+    } finally {
+      this.isSavingFunctionalImpact.set(false);
     }
   }
 
