@@ -3,7 +3,7 @@
  * These types are consumed by the application layer (use cases) and the infrastructure adapters.
  */
 
-export type Gender = 'Male' | 'Female';
+export type Gender = 'Masculino' | 'Femenino';
 
 export interface PatientProfile {
   readonly age: number;

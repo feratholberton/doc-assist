@@ -2,7 +2,6 @@
   margin-top: 2.5rem;
   padding: 1.75rem;
   border-radius: 12px;
-  background-color: #ecfeff;
   border: 1px solid rgba(8, 145, 178, 0.3);
   color: #0f172a;
 }
@@ -132,7 +131,7 @@
   padding: 0.65rem 1.25rem;
   border-radius: 8px;
   border: none;
-  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  background: var(--cl-main-800);
   color: #ffffff;
   font-weight: 600;
   cursor: pointer;
@@ -223,7 +222,7 @@
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   border: none;
-  background: linear-gradient(135deg, #10b981, #0ea5e9);
+  background: var(--cl-main-800);
   color: #ffffff;
   font-weight: 600;
   cursor: pointer;

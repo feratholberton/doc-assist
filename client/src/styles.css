@@ -1,1 +1,110 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+	--cl-main-100: hsl(176, 100%, 95%);
+  --cl-main-200: hsl(176, 100%, 85%);
+  --cl-main-300: hsl(176, 100%, 75%);
+  --cl-main-400: hsl(176, 100%, 55%);
+  --cl-main-500: hsl(176, 100%, 45%);
+  --cl-main-600: hsl(176, 100%, 35%);
+  --cl-main-700: hsl(176, 100%, 25%);
+  --cl-main-800: hsl(176, 100%, 15%);
+  --cl-main-900: hsl(176, 100%, 5%);
+
+  --cl-main-mid-100: hsl(176, 50%, 95%);
+  --cl-main-mid-200: hsl(176, 50%, 85%);
+  --cl-main-mid-300: hsl(176, 50%, 75%);
+  --cl-main-mid-400: hsl(176, 50%, 55%);
+  --cl-main-mid-500: hsl(176, 50%, 45%);
+  --cl-main-mid-600: hsl(176, 50%, 35%);
+  --cl-main-mid-700: hsl(176, 50%, 25%);
+  --cl-main-mid-800: hsl(176, 50%, 15%);
+  --cl-main-mid-900: hsl(176, 50%, 5%);
+
+	--cl-neutral-100: hsl(0, 0%, 95%);
+  --cl-neutral-200: hsl(0, 0%, 85%);
+	--cl-neutral-300: hsl(0, 0%, 75%);
+  --cl-neutral-400: hsl(0, 0%, 55%);
+  --cl-neutral-500: hsl(0, 0%, 45%);
+  --cl-neutral-600: hsl(0, 0%, 35%);
+  --cl-neutral-700: hsl(0, 0%, 25%);
+  --cl-neutral-800: hsl(0, 0%, 15%);
+	--cl-neutral-900: hsl(0, 0%, 5%);
+
+  --ff-main: 'Inter', sans-serif;
+	--fs-100: 0.625rem;
+	--fs-400: 0.875rem;
+	--fs-800: 1.125rem;
+	--fw-regular: 400;
+	--fw-bold: 700;
+	--ls-400: 0.094rem;
+	--ty-name: var(--fw-bold) var(--fs-800) var(--ff-main);
+	--ty-age: var(--fw-regular) var(--fs-800) var(--ff-main);
+	--ty-location: var(--fw-regular) var(--fs-400) var(--ff-main);
+	--ty-value: var(--fw-bold) var(--fs-800) var(--ff-main);
+	--ty-label: var(--fw-regular) var(--fs-100) var(--ff-main);
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: inherit;
+}
+
+html {
+	box-sizing: border-box;
+}
+
+body {
+  background: var(--cl-main-100);
+  margin: 0;
+  font-family: var(--ff-main);
+}
+
+
+main {
+  width: 100%;
+  min-height: 100%;
+  display: grid;
+  gap: 2.5rem;
+  /* justify-content: center; */
+  align-items: center;
+  padding: 1rem;
+  box-sizing: inherit;
+  position: relative;
+}
+
+section {
+  background: white;
+  border: var(--cl-main-mid-400) solid thin;
+  border-radius: 1.5rem;
+  padding: 2.5rem 3.25rem;
+
+  h2 {
+    margin: 0 0 1.5rem;
+    padding-bottom: 1rem;
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--cl-main-800);
+    border-bottom: solid thin var(--cl-main-mid-500);
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+}
+
+button {
+  color: #ffffff;
+  background: var(--cl-main-800);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 8px;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}

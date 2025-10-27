@@ -44,7 +44,7 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class IntakeFacade {
-  public readonly genders = signal<Gender[]>(['Male', 'Female']);
+  public readonly genders = signal<Gender[]>(['Masculino', 'Femenino']);
   public readonly isSubmitting = signal(false);
   public readonly submissionError = signal<string | null>(null);
   public readonly submissionResult = signal<StartIntakeResult | null>(null);

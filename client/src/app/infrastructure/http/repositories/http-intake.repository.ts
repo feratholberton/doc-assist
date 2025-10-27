@@ -57,7 +57,11 @@ import {
   StartResponse
 } from '../../../models/intake.models';
 
-const endpoint = (path: string): string => `${API_BASE_URL}${path}`;
+const endpoint = (path: string): string => {
+  const baseUrl = API_BASE_URL.replace(/\/$/, '');
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${baseUrl}${normalizedPath}`;
+};
 
 @Injectable({ providedIn: 'root' })
 export class HttpIntakeRepository extends IntakeRepository {

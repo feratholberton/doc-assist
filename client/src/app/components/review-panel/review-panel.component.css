@@ -28,7 +28,7 @@
 }
 
 .btn {
-  background: #1f2937;
+  background: var(--cl-main-800);
   color: #ffffff;
   border: none;
   border-radius: 0.375rem;

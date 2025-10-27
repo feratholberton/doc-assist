@@ -30,7 +30,7 @@ export class IntakeFormService {
         Validators.min(0),
         Validators.max(140)
       ]),
-      gender: this.fb.nonNullable.control<Gender>('Female', [
+      gender: this.fb.nonNullable.control<Gender>('Femenino', [
         Validators.required
       ]),
       chiefComplaint: this.fb.nonNullable.control('', [
@@ -47,7 +47,7 @@ export class IntakeFormService {
   resetForm(form: FormGroup<IntakeFormControls>): void {
     form.reset({
       age: 30,
-      gender: 'Female',
+      gender: 'Femenino',
       chiefComplaint: ''
     });
   }

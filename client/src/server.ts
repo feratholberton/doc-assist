@@ -36,15 +36,72 @@ app.use(
 );
 
 /**
+ * Sanitize and validate URL to prevent XSS attacks
+ */
+const sanitizeUrl = (url: string): string => {
+  try {
+    // Parse the URL to validate it
+    const urlObj = new URL(url);
+    
+    // Only allow http and https protocols
+    if (!['http:', 'https:'].includes(urlObj.protocol)) {
+      throw new Error('Invalid protocol');
+    }
+    
+    // Return the sanitized URL (toString() normalizes it)
+    return urlObj.toString();
+  } catch (error) {
+    console.error('Invalid API_BASE_URL:', url, error);
+    return 'http://localhost:3000'; // Fallback to safe default
+  }
+};
+
+/**
+ * Escape HTML special characters to prevent XSS
+ */
+const escapeHtml = (str: string): string => {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
+/**
  * Handle all other requests by rendering the Angular application.
  */
-app.use((req, res, next) => {
-  angularApp
-    .handle(req)
-    .then((response) =>
-      response ? writeResponseToNodeResponse(response, res) : next(),
-    )
-    .catch(next);
+app.use(async (req, res, next) => {
+  try {
+    const response = await angularApp.handle(req);
+    if (!response) {
+      next();
+      return;
+    }
+    
+    // Get the API base URL from environment or use default
+    const rawApiBaseUrl = process.env['API_BASE_URL'] || 'http://localhost:3000';
+    
+    // Sanitize and validate the URL
+    const apiBaseUrl = sanitizeUrl(rawApiBaseUrl);
+    
+    // Escape for safe HTML injection
+    const safeApiBaseUrl = escapeHtml(apiBaseUrl);
+    
+    // Get the response text and replace the placeholder
+    const html = await response.text();
+    const modifiedHtml = html.replace('{{API_BASE_URL}}', safeApiBaseUrl);
+    
+    // Set headers
+    response.headers.forEach((value, key) => {
+      res.setHeader(key, value);
+    });
+    
+    // Send the modified HTML
+    res.status(response.status).send(modifiedHtml);
+  } catch (error) {
+    next(error);
+  }
 });
 
 /**

@@ -1,6 +1,6 @@
 <form class="form" [formGroup]="intakeForm()" (ngSubmit)="onSubmit()" novalidate>
   <div class="form__group">
-    <label class="form__label" for="age">Age</label>
+    <label class="form__label" for="age">Edad</label>
     <input
       id="age"
       type="number"
@@ -13,7 +13,7 @@
     />
     @if (intakeForm().get('age')?.hasError('required') && intakeForm().get('age')?.touched) {
       <p class="form__error">
-        Age is required.
+        Ingresa la edad.
       </p>
     }
     @if (
@@ -21,13 +21,13 @@
       intakeForm().get('age')?.touched
     ) {
       <p class="form__error">
-        Age must be between 0 and 140.
+        La edad debe ser un número entre 0 y 140.
       </p>
     }
   </div>
 
   <div class="form__group">
-    <label class="form__label" for="gender">Gender</label>
+    <label class="form__label" for="gender">Sexo</label>
     <select
       id="gender"
       formControlName="gender"
@@ -46,7 +46,7 @@
   </div>
 
   <div class="form__group">
-    <label class="form__label" for="chiefComplaint">Chief Complaint</label>
+    <label class="form__label" for="chiefComplaint">Motivo de consulta</label>
     <textarea
       id="chiefComplaint"
       formControlName="chiefComplaint"
@@ -56,22 +56,22 @@
     ></textarea>
     @if (intakeForm().get('chiefComplaint')?.hasError('required') && intakeForm().get('chiefComplaint')?.touched) {
       <p class="form__error">
-        Chief complaint is required.
+        Debes ingresar el motivo de consulta.
       </p>
     }
     @if (intakeForm().get('chiefComplaint')?.hasError('maxlength') && intakeForm().get('chiefComplaint')?.touched) {
       <p class="form__error">
-        Chief complaint must be 1000 characters or fewer.
+        El motivo de consulta no puede superar los 1000 caracteres.
       </p>
     }
   </div>
 
   <div class="form__actions">
     <button type="submit" class="button button--primary" [disabled]="isSubmitting()">
-      {{ isSubmitting() ? 'Submitting…' : 'Generate Summary' }}
+      {{ isSubmitting() ? 'Enviando…' : 'Iniciar consulta' }}
     </button>
     <button type="button" class="button button--secondary" (click)="onReset()" [disabled]="isSubmitting()">
-      Reset
+      Reiniciar
     </button>
   </div>
 </form>
