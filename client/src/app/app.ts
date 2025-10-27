@@ -17,10 +17,12 @@ import { PriorTherapiesSectionComponent } from './components/prior-therapies-sec
 import { RedFlagsSectionComponent } from './components/red-flags-section/red-flags-section.component';
 import { ReviewPanelComponent } from './components/review-panel/review-panel.component';
 import { IntakeFacade } from './presentation/state/intake.facade';
+import { Logo } from './components/logo/logo';
 
 @Component({
   selector: 'app-root',
   imports: [
+    Logo,
     ReactiveFormsModule,
     CommonModule,
     PatientIntakeFormComponent,
