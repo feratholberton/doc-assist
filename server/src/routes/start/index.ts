@@ -3,7 +3,7 @@ import { normalizeAntecedents, normalizeChiefComplaint } from '../../stores/pati
 
 interface StartRequestBody {
   age: number;
-  gender: 'Male' | 'Female';
+  gender: 'Masculino' | 'Femenino';
   chiefComplaint: string;
   excludeAntecedents?: string[];
   selectedAntecedents?: string[];
@@ -24,7 +24,7 @@ const startRoute: FastifyPluginAsync = async (fastify) => {
           required: ['age', 'gender', 'chiefComplaint'],
           properties: {
             age: { type: 'integer', minimum: 0, maximum: 140 },
-            gender: { type: 'string', enum: ['Male', 'Female'] },
+            gender: { type: 'string', enum: ['Masculino', 'Femenino'] },
             chiefComplaint: { type: 'string', minLength: 1 },
             excludeAntecedents: {
               type: 'array',

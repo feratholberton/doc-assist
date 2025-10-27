@@ -10,7 +10,7 @@ import {
 
 interface SavePrecipitatingRequestBody {
   age: number;
-  gender: 'Male' | 'Female';
+  gender: 'Masculino' | 'Femenino';
   chiefComplaint: string;
   answers: Array<{ id: string; answer: string }>;
 }
@@ -32,7 +32,7 @@ const precipitatingRoute: FastifyPluginAsync = async (fastify) => {
           required: ['age', 'gender', 'chiefComplaint', 'answers'],
           properties: {
             age: { type: 'integer', minimum: 0, maximum: 140 },
-            gender: { type: 'string', enum: ['Male', 'Female'] },
+            gender: { type: 'string', enum: ['Masculino', 'Femenino'] },
             chiefComplaint: { type: 'string', minLength: 1 },
             answers: {
               type: 'array',
@@ -76,7 +76,7 @@ const precipitatingRoute: FastifyPluginAsync = async (fastify) => {
                 ],
                 properties: {
                   age: { type: 'integer' },
-                  gender: { type: 'string', enum: ['Male', 'Female'] },
+                  gender: { type: 'string', enum: ['Masculino', 'Femenino'] },
                   chiefComplaint: { type: 'string' },
                   selectedAntecedents: { type: 'array', items: { type: 'string' } },
                   selectedAllergies: { type: 'array', items: { type: 'string' } },
@@ -221,7 +221,7 @@ const precipitatingRoute: FastifyPluginAsync = async (fastify) => {
         { id: 'infecciones-recientes', prompt: '¿Tuvo infecciones recientes?', answer: '' },
         { id: 'viajo-recientemente', prompt: '¿Ha viajado recientemente? ¿A dónde?', answer: '' },
         { id: 'exposicion-mosquitos', prompt: '¿Exposición a mosquitos?', answer: '' },
-        { id: 'contacto-animales', prompt: '¿Contacto con animales?', answer: '' },
+        { id: 'contacto-aniMasculinos', prompt: '¿Contacto con aniMasculinos?', answer: '' },
         { id: 'nota-personalizada-rec', prompt: 'Nota personalizada', answer: '' }
       ]
 

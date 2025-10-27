@@ -9,7 +9,7 @@ import { parseStringArrayFromModelAnswer } from '../../utils/parse-string-array.
 
 interface AntecedentsRequestBody {
   age: number;
-  gender: 'Male' | 'Female';
+  gender: 'Masculino' | 'Femenino';
   chiefComplaint: string;
   selectedAntecedents: string[];
 }
@@ -31,7 +31,7 @@ const antecedentsRoute: FastifyPluginAsync = async (fastify) => {
           required: ['age', 'gender', 'chiefComplaint', 'selectedAntecedents'],
           properties: {
             age: { type: 'integer', minimum: 0, maximum: 140 },
-            gender: { type: 'string', enum: ['Male', 'Female'] },
+            gender: { type: 'string', enum: ['Masculino', 'Femenino'] },
             chiefComplaint: { type: 'string', minLength: 1 },
             selectedAntecedents: {
               type: 'array',
@@ -59,7 +59,7 @@ const antecedentsRoute: FastifyPluginAsync = async (fastify) => {
                 ],
                 properties: {
                   age: { type: 'integer' },
-                  gender: { type: 'string', enum: ['Male', 'Female'] },
+                  gender: { type: 'string', enum: ['Masculino', 'Femenino'] },
                   chiefComplaint: { type: 'string' },
                   selectedAntecedents: {
                     type: 'array',

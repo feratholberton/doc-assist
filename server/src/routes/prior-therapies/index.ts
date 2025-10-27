@@ -10,7 +10,7 @@ import {
 
 interface SavePriorTherapiesRequestBody {
   age: number;
-  gender: 'Male' | 'Female';
+  gender: 'Masculino' | 'Femenino';
   chiefComplaint: string;
   answers: Array<{ id: string; answer: string }>;
 }
@@ -32,7 +32,7 @@ const priorTherapiesRoute: FastifyPluginAsync = async (fastify) => {
           required: ['age', 'gender', 'chiefComplaint', 'answers'],
           properties: {
             age: { type: 'integer', minimum: 0, maximum: 140 },
-            gender: { type: 'string', enum: ['Male', 'Female'] },
+            gender: { type: 'string', enum: ['Masculino', 'Femenino'] },
             chiefComplaint: { type: 'string', minLength: 1 },
             answers: {
               type: 'array',
@@ -79,7 +79,7 @@ const priorTherapiesRoute: FastifyPluginAsync = async (fastify) => {
                 ],
                 properties: {
                   age: { type: 'integer' },
-                  gender: { type: 'string', enum: ['Male', 'Female'] },
+                  gender: { type: 'string', enum: ['Masculino', 'Femenino'] },
                   chiefComplaint: { type: 'string' },
                   selectedAntecedents: { type: 'array', items: { type: 'string' } },
                   selectedAllergies: { type: 'array', items: { type: 'string' } },

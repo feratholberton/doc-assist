@@ -14,7 +14,7 @@ import { parseStringArrayFromModelAnswer } from '../../utils/parse-string-array.
 
 interface SaveDrugsRequestBody {
   age: number;
-  gender: 'Male' | 'Female';
+  gender: 'Masculino' | 'Femenino';
   chiefComplaint: string;
   selectedAntecedents?: string[];
   selectedAllergies?: string[];
@@ -29,7 +29,7 @@ interface SaveDrugsResponseBody {
 
 interface SuggestDrugsRequestBody {
   age: number;
-  gender: 'Male' | 'Female';
+  gender: 'Masculino' | 'Femenino';
   chiefComplaint: string;
   selectedAntecedents?: string[];
   selectedAllergies?: string[];
@@ -54,7 +54,7 @@ const buildDrugPrompt = ({
   confirmed
 }: {
   age: number;
-  gender: 'Male' | 'Female';
+  gender: 'Masculino' | 'Femenino';
   chiefComplaint: string;
   antecedents: string[];
   allergies: string[];
@@ -103,7 +103,7 @@ const drugsRoute: FastifyPluginAsync = async (fastify) => {
           required: ['age', 'gender', 'chiefComplaint', 'selectedDrugs'],
           properties: {
             age: { type: 'integer', minimum: 0, maximum: 140 },
-            gender: { type: 'string', enum: ['Male', 'Female'] },
+            gender: { type: 'string', enum: ['Masculino', 'Femenino'] },
             chiefComplaint: { type: 'string', minLength: 1 },
             selectedAntecedents: {
               type: 'array',
@@ -144,7 +144,7 @@ const drugsRoute: FastifyPluginAsync = async (fastify) => {
                 ],
                 properties: {
                   age: { type: 'integer' },
-                  gender: { type: 'string', enum: ['Male', 'Female'] },
+                  gender: { type: 'string', enum: ['Masculino', 'Femenino'] },
                   chiefComplaint: { type: 'string' },
                   selectedAntecedents: {
                     type: 'array',
@@ -239,7 +239,7 @@ const drugsRoute: FastifyPluginAsync = async (fastify) => {
           required: ['age', 'gender', 'chiefComplaint'],
           properties: {
             age: { type: 'integer', minimum: 0, maximum: 140 },
-            gender: { type: 'string', enum: ['Male', 'Female'] },
+            gender: { type: 'string', enum: ['Masculino', 'Femenino'] },
             chiefComplaint: { type: 'string', minLength: 1 },
             selectedAntecedents: {
               type: 'array',
@@ -289,7 +289,7 @@ const drugsRoute: FastifyPluginAsync = async (fastify) => {
                 ],
                 properties: {
                   age: { type: 'integer' },
-                  gender: { type: 'string', enum: ['Male', 'Female'] },
+                  gender: { type: 'string', enum: ['Masculino', 'Femenino'] },
                   chiefComplaint: { type: 'string' },
                   selectedAntecedents: {
                     type: 'array',

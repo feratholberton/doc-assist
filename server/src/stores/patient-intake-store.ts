@@ -1,4 +1,4 @@
-export type PatientGender = 'Male' | 'Female';
+export type PatientGender = 'Masculino' | 'Femenino';
 
 export interface PatientIntakeRecord {
   age: number;
