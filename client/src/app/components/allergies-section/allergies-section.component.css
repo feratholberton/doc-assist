@@ -38,23 +38,6 @@
   gap: 0.75rem;
 }
 
-.allergies__option {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.6rem 0.75rem;
-  border-radius: 10px;
-  border: 1px solid rgba(14, 165, 233, 0.25);
-  background-color: rgba(224, 242, 254, 0.75);
-  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.allergies__option:hover {
-  border-color: rgba(14, 165, 233, 0.45);
-  background-color: rgba(186, 230, 253, 0.85);
-  box-shadow: 0 6px 18px rgba(14, 165, 233, 0.16);
-}
-
 .allergies__option input {
   margin-top: 0.2rem;
 }

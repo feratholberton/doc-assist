@@ -108,3 +108,20 @@ button {
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
+
+
+fieldset div label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(79, 70, 229, 0.2);
+  border-radius: 10px;
+  background: var(--cl-main-100);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+fieldset div label:hover {
+  border-color: rgba(79, 70, 229, 0.4);
+  background: var(--cl-main-200);
+}
